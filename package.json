@@ -1,0 +1,31 @@
+{
+  "name": "lyrics-overlay",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "remotion studio",
+    "build": "remotion render LyricsOverlay out/lyrics.mov",
+    "build:transparent": "remotion render LyricsOverlay out/lyrics-transparent.mov --codec=prores --prores-profile=4444",
+    "build:with-audio": "remotion render LyricsWithAudio out/lyrics-with-audio.mov --codec=prores --prores-profile=4444",
+    "generate": "node scripts/generate-lyrics.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@remotion/cli": "^4.0.340",
+    "@remotion/media-utils": "^4.0.340",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "multer": "^2.0.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "remotion": "^4.0.340"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.11",
+    "@types/react-dom": "^19.1.7",
+    "typescript": "^5.9.2"
+  }
+}

@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎬 歌詞動画ビジュアルエディタ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            overflow: hidden;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            grid-template-rows: 60px 1fr 200px;
+            height: 100vh;
+            gap: 1px;
+            background: #333;
+        }
+        
+        /* ヘッダー */
+        .header {
+            grid-column: 1 / -1;
+            background: #2a2a2a;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 2px solid #444;
+        }
+        
+        .header h1 {
+            font-size: 20px;
+            margin-right: auto;
+        }
+        
+        .header button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        
+        /* プレビューエリア */
+        .preview {
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .video-preview {
+            width: 90%;
+            height: 80%;
+            background: #111;
+            border-radius: 10px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 50px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .lyrics-display {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px 40px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .lyrics-display h2 {
+            color: white;
+            font-size: 48px;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
+            text-align: center;
+        }
+        
+        .preview-controls {
+            position: absolute;
+            bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .preview-controls button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        
+        .preview-controls button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        /* サイドパネル */
+        .sidebar {
+            background: #2a2a2a;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .sidebar h3 {
+            margin-bottom: 15px;
+            color: #aaa;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .lyrics-list {
+            list-style: none;
+        }
+        
+        .lyrics-item {
+            background: #1a1a1a;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        
+        .lyrics-item:hover {
+            border-color: #667eea;
+        }
+        
+        .lyrics-item.active {
+            border-color: #764ba2;
+            background: #2a2a2a;
+        }
+        
+        .lyrics-item-text {
+            color: white;
+            margin-bottom: 5px;
+        }
+        
+        .lyrics-item-time {
+            color: #888;
+            font-size: 12px;
+        }
+        
+        .add-lyrics-btn {
+            width: 100%;
+            padding: 10px;
+            background: #333;
+            border: 2px dashed #666;
+            color: #aaa;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        /* タイムライン */
+        .timeline {
+            background: #2a2a2a;
+            grid-column: 1 / -1;
+            padding: 20px;
+            border-top: 2px solid #444;
+        }
+        
+        .timeline-track {
+            height: 60px;
+            background: #1a1a1a;
+            border-radius: 5px;
+            position: relative;
+            margin-bottom: 10px;
+        }
+        
+        .timeline-item {
+            position: absolute;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            height: 50px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            color: white;
+            font-size: 12px;
+            cursor: move;
+            top: 5px;
+        }
+        
+        .time-ruler {
+            height: 30px;
+            background: #333;
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .time-marker {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            border-left: 1px solid #666;
+            font-size: 10px;
+            color: #888;
+            padding-left: 5px;
+        }
+        
+        .playhead {
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background: #ff0000;
+            top: 0;
+            z-index: 10;
+        }
+        
+        /* コントロールパネル */
+        .controls {
+            position: fixed;
+            bottom: 220px;
+            right: 420px;
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .time-display {
+            background: #111;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            color: #0f0;
+        }
+        
+        /* 編集モーダル */
+        .edit-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 15px;
+            z-index: 1000;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+        }
+        
+        .edit-modal.active {
+            display: block;
+        }
+        
+        .edit-modal input, .edit-modal textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 5px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .modal-buttons button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .save-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .cancel-btn {
+            background: #444;
+            color: white;
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 999;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ヘッダー -->
+        <div class="header">
+            <h1>🎬 歌詞動画ビジュアルエディタ</h1>
+            <button onclick="loadAudio()">🎵 音楽を読み込む</button>
+            <button onclick="saveProject()">💾 保存</button>
+            <button onclick="exportVideo()">📹 動画を出力</button>
+        </div>
+        
+        <!-- プレビューエリア -->
+        <div class="preview">
+            <div class="video-preview">
+                <div class="lyrics-display">
+                    <h2 id="current-lyrics">ここに歌詞が表示されます</h2>
+                </div>
+            </div>
+            <div class="preview-controls">
+                <button onclick="playPause()">▶️</button>
+                <button onclick="stop()">⏹</button>
+            </div>
+        </div>
+        
+        <!-- サイドパネル -->
+        <div class="sidebar">
+            <h3>歌詞リスト</h3>
+            <ul class="lyrics-list" id="lyrics-list">
+                <li class="lyrics-item active" onclick="selectLyric(0)">
+                    <div class="lyrics-item-text">君に会えたその日から</div>
+                    <div class="lyrics-item-time">0:00 - 0:03</div>
+                </li>
+                <li class="lyrics-item" onclick="selectLyric(1)">
+                    <div class="lyrics-item-text">世界が輝いて見えた</div>
+                    <div class="lyrics-item-time">0:03 - 0:06</div>
+                </li>
+                <li class="lyrics-item" onclick="selectLyric(2)">
+                    <div class="lyrics-item-text">毎日が特別になった</div>
+                    <div class="lyrics-item-time">0:06 - 0:09</div>
+                </li>
+            </ul>
+            <button class="add-lyrics-btn" onclick="addNewLyric()">+ 歌詞を追加</button>
+            
+            <h3 style="margin-top: 30px;">スタイル設定</h3>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-size: 12px;">文字サイズ</label>
+                <input type="range" min="20" max="100" value="48" oninput="changeFontSize(this.value)" style="width: 100%">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-size: 12px;">位置</label>
+                <input type="range" min="50" max="400" value="150" oninput="changePosition(this.value)" style="width: 100%">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-size: 12px;">背景の透明度</label>
+                <input type="range" min="0" max="100" value="70" oninput="changeOpacity(this.value)" style="width: 100%">
+            </div>
+        </div>
+        
+        <!-- タイムライン -->
+        <div class="timeline">
+            <div class="time-ruler">
+                <div class="time-marker" style="left: 0%">0:00</div>
+                <div class="time-marker" style="left: 25%">0:15</div>
+                <div class="time-marker" style="left: 50%">0:30</div>
+                <div class="time-marker" style="left: 75%">0:45</div>
+                <div class="playhead" id="playhead" style="left: 0%"></div>
+            </div>
+            <div class="timeline-track" id="timeline-track">
+                <div class="timeline-item" style="left: 0%; width: 10%;">歌詞1</div>
+                <div class="timeline-item" style="left: 10%; width: 10%;">歌詞2</div>
+                <div class="timeline-item" style="left: 20%; width: 10%;">歌詞3</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- コントロールパネル -->
+    <div class="controls">
+        <div class="time-display" id="time-display">00:00:00</div>
+    </div>
+    
+    <!-- 編集モーダル -->
+    <div class="overlay" id="overlay" onclick="closeModal()"></div>
+    <div class="edit-modal" id="edit-modal">
+        <h3>歌詞を編集</h3>
+        <textarea id="edit-text" placeholder="歌詞テキスト" rows="3"></textarea>
+        <input type="number" id="edit-start" placeholder="開始時間（秒）" step="0.1">
+        <input type="number" id="edit-end" placeholder="終了時間（秒）" step="0.1">
+        <div class="modal-buttons">
+            <button class="save-btn" onclick="saveLyric()">保存</button>
+            <button class="cancel-btn" onclick="closeModal()">キャンセル</button>
+        </div>
+    </div>
+    
+    <script>
+        let lyricsData = [
+            { text: "君に会えたその日から", startTime: 0, endTime: 3 },
+            { text: "世界が輝いて見えた", startTime: 3, endTime: 6 },
+            { text: "毎日が特別になった", startTime: 6, endTime: 9 }
+        ];
+        
+        let currentTime = 0;
+        let isPlaying = false;
+        let selectedLyricIndex = 0;
+        let playInterval;
+        
+        // 音楽ファイルの読み込み
+        function loadAudio() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'audio/*';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    alert(`音楽ファイル「${file.name}」を読み込みました！`);
+                }
+            };
+            input.click();
+        }
+        
+        // 再生/一時停止
+        function playPause() {
+            isPlaying = !isPlaying;
+            if (isPlaying) {
+                playInterval = setInterval(() => {
+                    currentTime += 0.1;
+                    updatePlayhead();
+                    updateCurrentLyrics();
+                    updateTimeDisplay();
+                }, 100);
+            } else {
+                clearInterval(playInterval);
+            }
+        }
+        
+        // 停止
+        function stop() {
+            isPlaying = false;
+            clearInterval(playInterval);
+            currentTime = 0;
+            updatePlayhead();
+            updateCurrentLyrics();
+            updateTimeDisplay();
+        }
+        
+        // プレイヘッド更新
+        function updatePlayhead() {
+            const percentage = (currentTime / 60) * 100; // 60秒想定
+            document.getElementById('playhead').style.left = `${percentage}%`;
+        }
+        
+        // 現在の歌詞更新
+        function updateCurrentLyrics() {
+            const currentLyric = lyricsData.find(
+                lyric => currentTime >= lyric.startTime && currentTime < lyric.endTime
+            );
+            
+            if (currentLyric) {
+                document.getElementById('current-lyrics').textContent = currentLyric.text;
+            } else {
+                document.getElementById('current-lyrics').textContent = "";
+            }
+        }
+        
+        // 時間表示更新
+        function updateTimeDisplay() {
+            const minutes = Math.floor(currentTime / 60);
+            const seconds = Math.floor(currentTime % 60);
+            const milliseconds = Math.floor((currentTime % 1) * 100);
+            const display = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}:${String(milliseconds).padStart(2, '0')}`;
+            document.getElementById('time-display').textContent = display;
+        }
+        
+        // 歌詞選択
+        function selectLyric(index) {
+            selectedLyricIndex = index;
+            document.querySelectorAll('.lyrics-item').forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+            currentTime = lyricsData[index].startTime;
+            updatePlayhead();
+            updateCurrentLyrics();
+            updateTimeDisplay();
+        }
+        
+        // 新しい歌詞追加
+        function addNewLyric() {
+            document.getElementById('overlay').classList.add('active');
+            document.getElementById('edit-modal').classList.add('active');
+            document.getElementById('edit-text').value = '';
+            document.getElementById('edit-start').value = '';
+            document.getElementById('edit-end').value = '';
+        }
+        
+        // モーダルを閉じる
+        function closeModal() {
+            document.getElementById('overlay').classList.remove('active');
+            document.getElementById('edit-modal').classList.remove('active');
+        }
+        
+        // 歌詞保存
+        function saveLyric() {
+            const text = document.getElementById('edit-text').value;
+            const startTime = parseFloat(document.getElementById('edit-start').value);
+            const endTime = parseFloat(document.getElementById('edit-end').value);
+            
+            if (text && !isNaN(startTime) && !isNaN(endTime)) {
+                lyricsData.push({ text, startTime, endTime });
+                updateLyricsList();
+                closeModal();
+            }
+        }
+        
+        // 歌詞リスト更新
+        function updateLyricsList() {
+            const listEl = document.getElementById('lyrics-list');
+            listEl.innerHTML = lyricsData.map((lyric, index) => `
+                <li class="lyrics-item ${index === selectedLyricIndex ? 'active' : ''}" onclick="selectLyric(${index})">
+                    <div class="lyrics-item-text">${lyric.text}</div>
+                    <div class="lyrics-item-time">${formatTime(lyric.startTime)} - ${formatTime(lyric.endTime)}</div>
+                </li>
+            `).join('');
+        }
+        
+        // 時間フォーマット
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${String(secs).padStart(2, '0')}`;
+        }
+        
+        // スタイル変更
+        function changeFontSize(value) {
+            document.querySelector('.lyrics-display h2').style.fontSize = `${value}px`;
+        }
+        
+        function changePosition(value) {
+            document.querySelector('.video-preview').style.paddingBottom = `${value}px`;
+        }
+        
+        function changeOpacity(value) {
+            document.querySelector('.lyrics-display').style.backgroundColor = `rgba(0, 0, 0, ${value / 100})`;
+        }
+        
+        // プロジェクト保存
+        function saveProject() {
+            const projectData = {
+                lyrics: lyricsData,
+                settings: {
+                    fontSize: document.querySelector('input[type="range"]').value,
+                    // その他の設定
+                }
+            };
+            
+            const dataStr = JSON.stringify(projectData, null, 2);
+            const blob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'lyrics-project.json';
+            a.click();
+            
+            alert('プロジェクトを保存しました！');
+        }
+        
+        // 動画エクスポート
+        function exportVideo() {
+            // lyrics-data.jsonとして保存
+            const dataStr = JSON.stringify(lyricsData.map(item => ({
+                startTime: item.startTime,
+                endTime: item.endTime,
+                text: item.text
+            })), null, 2);
+            
+            const blob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'lyrics-data.json';
+            a.click();
+            
+            alert('lyrics-data.jsonを生成しました！\nsrc/lyrics-data.jsonに配置して、\nnpm run build:transparentで動画を生成してください。');
+        }
+        
+        // 初期化
+        updateTimeDisplay();
+    </script>
+</body>
+</html>

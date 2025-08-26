@@ -1,0 +1,27 @@
+[
+  {
+    "startTime": 0,
+    "endTime": 3,
+    "text": "ここに1番目の歌詞"
+  },
+  {
+    "startTime": 3,
+    "endTime": 6,
+    "text": "ここに2番目の歌詞"
+  },
+  {
+    "startTime": 6,
+    "endTime": 9,
+    "text": "ここに3番目の歌詞"
+  },
+  {
+    "startTime": 9,
+    "endTime": 12,
+    "text": "ここに4番目の歌詞"
+  },
+  {
+    "startTime": 12,
+    "endTime": 15,
+    "text": "ここに5番目の歌詞"
+  }
+]

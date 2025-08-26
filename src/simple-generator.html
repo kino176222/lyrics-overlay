@@ -1,0 +1,352 @@
+    <!DOCTYPE html>
+    
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歌詞オーバーレイ自動生成ツール</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .step {
+            margin-bottom: 30px;
+        }
+        
+        .step-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        .step-title {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .upload-box {
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+        }
+        
+        .upload-box:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+        
+        .upload-box.uploaded {
+            border-color: #4CAF50;
+            background: #f0fff4;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .file-name {
+            margin-top: 10px;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            resize: vertical;
+            font-family: monospace;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .generate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s;
+            margin-top: 20px;
+        }
+        
+        .generate-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .generate-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        
+        .status.processing {
+            background: #fff3cd;
+            color: #856404;
+            display: block;
+        }
+        
+        .help-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 歌詞オーバーレイ自動生成</h1>
+        <p class="subtitle">MP3と歌詞テキストをアップロードするだけ！</p>
+        
+        <div class="step">
+            <div class="step-title">
+                <span class="step-number">1</span>
+                音楽ファイルをアップロード
+            </div>
+            <div class="upload-box" id="mp3-upload-box">
+                <input type="file" id="mp3-file" accept=".mp3,.m4a,.wav">
+                <label for="mp3-file">
+                    📁 クリックしてMP3ファイルを選択<br>
+                    <span class="help-text">（またはドラッグ＆ドロップ）</span>
+                </label>
+                <div class="file-name" id="mp3-filename"></div>
+            </div>
+        </div>
+        
+        <div class="step">
+            <div class="step-title">
+                <span class="step-number">2</span>
+                歌詞を入力（1行ずつ）
+            </div>
+            <textarea id="lyrics-text" placeholder="歌詞を1行ずつ入力してください
+
+例：
+おはよう世界
+今日も素敵な一日
+空は青くて
+風が気持ちいい
+
+※空行を入れると、その部分は歌詞が表示されません"></textarea>
+            <p class="help-text">各行が順番に表示されます。タイミングは自動で調整されます。</p>
+        </div>
+        
+        <button class="generate-btn" id="generate-btn" onclick="generateVideo()">
+            🎬 動画を生成する
+        </button>
+        
+        <div class="status" id="status"></div>
+    </div>
+    
+    <script>
+        let mp3File = null;
+        let lyricsLines = [];
+        
+        // MP3ファイルのアップロード処理
+        document.getElementById('mp3-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                mp3File = file;
+                document.getElementById('mp3-filename').textContent = '✅ ' + file.name;
+                document.getElementById('mp3-upload-box').classList.add('uploaded');
+            }
+        });
+        
+        // ドラッグ＆ドロップ対応
+        const uploadBox = document.getElementById('mp3-upload-box');
+        
+        uploadBox.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#764ba2';
+        });
+        
+        uploadBox.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#667eea';
+        });
+        
+        uploadBox.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#667eea';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type.includes('audio')) {
+                    mp3File = file;
+                    document.getElementById('mp3-filename').textContent = '✅ ' + file.name;
+                    this.classList.add('uploaded');
+                    document.getElementById('mp3-file').files = files;
+                }
+            }
+        });
+        
+        function generateVideo() {
+            const lyricsText = document.getElementById('lyrics-text').value.trim();
+            const statusDiv = document.getElementById('status');
+            
+            // バリデーション
+            if (!mp3File) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ 音楽ファイルをアップロードしてください';
+                return;
+            }
+            
+            if (!lyricsText) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ 歌詞を入力してください';
+                return;
+            }
+            
+            // 歌詞を行ごとに分割
+            lyricsLines = lyricsText.split('\n').filter(line => line.trim());
+            
+            if (lyricsLines.length === 0) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ 歌詞を入力してください';
+                return;
+            }
+            
+            // 処理中表示
+            statusDiv.className = 'status processing';
+            statusDiv.textContent = '⏳ 動画を生成中... しばらくお待ちください';
+            document.getElementById('generate-btn').disabled = true;
+            
+            // 音声ファイルから長さを取得
+            const audio = new Audio();
+            audio.src = URL.createObjectURL(mp3File);
+            
+            audio.addEventListener('loadedmetadata', function() {
+                const duration = audio.duration;
+                const timePerLine = duration / lyricsLines.length;
+                
+                // 歌詞データを生成
+                const lyricsData = lyricsLines.map((text, index) => ({
+                    startTime: index * timePerLine,
+                    endTime: (index + 1) * timePerLine,
+                    text: text
+                }));
+                
+                // JSONファイルとして保存
+                saveLyricsData(lyricsData, duration);
+            });
+        }
+        
+        function saveLyricsData(lyricsData, duration) {
+            // データを準備
+            const config = {
+                lyrics: lyricsData,
+                duration: Math.ceil(duration),
+                audioFile: mp3File.name
+            };
+            
+            // JSONをダウンロード可能にする
+            const dataStr = JSON.stringify(lyricsData, null, 2);
+            const blob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            
+            // 自動ダウンロードリンクを作成
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'lyrics-data.json';
+            a.click();
+            
+            // ステータス更新
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = 'status success';
+            statusDiv.innerHTML = `
+                ✅ 歌詞データファイルを生成しました！<br><br>
+                <strong>次のステップ：</strong><br>
+                1. ダウンロードされた lyrics-data.json を src/lyrics-data.json に上書き保存<br>
+                2. MP3ファイルを public フォルダに配置<br>
+                3. npm start でプレビュー<br>
+                4. npm run build:transparent で動画生成
+            `;
+            
+            document.getElementById('generate-btn').disabled = false;
+        }
+    </script>
+</body>
+</html>
