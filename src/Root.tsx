@@ -9,7 +9,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="LyricsOverlay"
         component={LyricsOverlay}
-        durationInFrames={900}
+        durationInFrames={7920}
         fps={30}
         width={1920}
         height={1080}
@@ -17,7 +17,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="LyricsWithAudio"
         component={LyricsWithAudio}
-        durationInFrames={900}
+        durationInFrames={7920}
         fps={30}
         width={1920}
         height={1080}

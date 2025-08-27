@@ -22,18 +22,18 @@ export const LyricsOverlay: React.FC = () => {
     return null;
   }
 
-  // アニメーション計算
-  const animationProgress = spring({
-    fps,
-    frame: frame - currentLyric.startFrame,
-    config: {
-      damping: 30,
-      stiffness: 150,
-      mass: 1,
-    },
-  });
+  // フェードイン効果（最初の10フレームで透明度を0から1に）
+  const fadeInProgress = interpolate(
+    frame - currentLyric.startFrame,
+    [0, 10],
+    [0, 1],
+    {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+    }
+  );
 
-  // フェードアウト効果
+  // フェードアウト効果（最後の15フレームで透明度を1から0に）
   const fadeOutProgress = interpolate(
     frame,
     [currentLyric.endFrame - 15, currentLyric.endFrame],
@@ -44,11 +44,8 @@ export const LyricsOverlay: React.FC = () => {
     }
   );
 
-  // スケールアニメーション
-  const scale = interpolate(animationProgress, [0, 1], [0.8, 1]);
-
-  // Y位置のアニメーション（下から上にスライドイン）
-  const translateY = interpolate(animationProgress, [0, 1], [50, 0]);
+  // 最終的な透明度（フェードインとフェードアウトの小さい方を使用）
+  const finalOpacity = Math.min(fadeInProgress, fadeOutProgress);
 
   return (
     <AbsoluteFill
@@ -60,11 +57,11 @@ export const LyricsOverlay: React.FC = () => {
       <div
         style={{
           position: 'absolute',
-          bottom: '150px',
+          bottom: '26px',                         // 半行分さらに下げた位置
           left: '50%',
-          transform: `translateX(-50%) translateY(${translateY}px) scale(${scale})`,
-          opacity: fadeOutProgress,
-          width: '80%',
+          transform: 'translateX(-50%)',
+          opacity: finalOpacity,
+          width: '100%',                          // 幅を100%に
           textAlign: 'center',
         }}
       >
@@ -81,12 +78,13 @@ export const LyricsOverlay: React.FC = () => {
           {/* テキスト本体 */}
           <h1
             style={{
-              color: 'white',
-              fontSize: '60px',
-              fontWeight: 'bold',
+              fontFamily: '"Hiragino Mincho ProN", "Yu Mincho", serif',  // 美しい明朝体
+              fontSize: '52px',                    // 指定のサイズ
+              color: 'black',                      // 黒い文字
+              textShadow: '0 0 20px rgba(255,255,255,0.9), 0 0 10px rgba(255,255,255,0.8), 0 0 5px rgba(255,255,255,0.7), 0.5px 0.5px 0 rgba(255,255,255,0.9)',  // ぼんやり発光するグロー効果
+              textAlign: 'center',
               margin: 0,
-              textShadow: '2px 2px 10px rgba(0, 0, 0, 0.8)',
-              fontFamily: 'Helvetica, Arial, sans-serif',
+              fontWeight: 'bold',                  // 太字でしっかり表示
             }}
           >
             {currentLyric.text}
