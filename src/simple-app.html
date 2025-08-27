@@ -105,7 +105,7 @@
         
         .timeline {
             margin: 20px 0;
-            max-height: 300px;
+            max-height: 400px;
             overflow-y: auto;
             border: 1px solid #ddd;
             border-radius: 5px;
@@ -116,22 +116,69 @@
         .lyrics-line {
             display: flex;
             align-items: center;
-            padding: 8px;
+            padding: 10px;
             margin: 5px 0;
-            background: #f0f0f0;
+            background: #f8f9fa;
             border-radius: 5px;
+            cursor: move;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .lyrics-line:hover {
+            background: #e8eaed;
+            border-color: #dadce0;
+        }
+        
+        .lyrics-line.dragging {
+            opacity: 0.5;
+            background: #dadce0;
+            transform: scale(0.98);
+        }
+        
+        .drag-handle {
+            margin-right: 10px;
+            color: #999;
+            cursor: grab;
+            font-size: 14px;
+            user-select: none;
+        }
+        
+        .drag-handle:active {
+            cursor: grabbing;
         }
         
         .lyrics-text {
             flex: 1;
-            margin-right: 10px;
+            margin-right: 15px;
+            font-size: 14px;
+            color: #333;
+        }
+        
+        .time-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .time-slider {
+            width: 150px;
+            cursor: pointer;
         }
         
         .time-input {
-            width: 80px;
-            padding: 4px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
+            width: 60px;
+            padding: 4px 6px;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 13px;
+        }
+        
+        .duration-label {
+            font-size: 12px;
+            color: #666;
+            white-space: nowrap;
         }
         
         .buttons {
@@ -252,6 +299,186 @@
             font-size: 18px;
         }
         
+        /* 設定パネルのスタイル */
+        .settings-panel {
+            background: #f0f4f8;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .settings-panel h4 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .setting-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+        }
+        
+        .setting-label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #555;
+        }
+        
+        .position-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .position-option {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .position-option:has(input:checked) {
+            background: #e3f2fd;
+            border-color: #2196F3;
+        }
+        
+        .position-option input[type="radio"] {
+            margin-right: 8px;
+        }
+        
+        .position-fine-tune {
+            margin-top: 10px;
+        }
+        
+        .slider {
+            width: 100%;
+            margin-top: 5px;
+        }
+        
+        .animation-select {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .animation-settings {
+            margin-top: 15px;
+        }
+        
+        .slider-group {
+            margin-bottom: 10px;
+        }
+        
+        .font-settings {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .font-size-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .font-input {
+            width: 70px;
+            padding: 5px;
+            border: 2px solid #dee2e6;
+            border-radius: 4px;
+        }
+        
+        .color-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .color-group label {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        input[type="color"] {
+            width: 40px;
+            height: 30px;
+            border: 2px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .stroke-width-group {
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        /* プレビューアニメーション */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes scaleIn {
+            from { 
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to { 
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes rotateIn {
+            from { 
+                opacity: 0;
+                transform: rotate(-10deg);
+            }
+            to { 
+                opacity: 1;
+                transform: rotate(0);
+            }
+        }
+        
+        @keyframes bounceIn {
+            0% { 
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% { 
+                transform: scale(1.05);
+            }
+            70% { 
+                transform: scale(0.9);
+            }
+            100% { 
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
         .format-selector {
             display: flex;
             gap: 10px;
@@ -311,6 +538,79 @@
         <div class="process-section" id="processSection">
             <h3>🎯 歌詞とタイミング</h3>
             
+            <!-- 歌詞表示設定パネル -->
+            <div class="settings-panel">
+                <h4>📐 表示設定</h4>
+                
+                <!-- 位置調整 -->
+                <div class="setting-group">
+                    <label class="setting-label">表示位置:</label>
+                    <div class="position-selector">
+                        <label class="position-option">
+                            <input type="radio" name="position" value="top">
+                            <span>上部</span>
+                        </label>
+                        <label class="position-option">
+                            <input type="radio" name="position" value="center">
+                            <span>中央</span>
+                        </label>
+                        <label class="position-option">
+                            <input type="radio" name="position" value="bottom" checked>
+                            <span>下部</span>
+                        </label>
+                    </div>
+                    <div class="position-fine-tune">
+                        <label>Y軸微調整: <span id="yOffsetValue">0</span>px</label>
+                        <input type="range" id="yOffsetSlider" min="-100" max="100" value="0" class="slider">
+                    </div>
+                </div>
+                
+                <!-- アニメーション効果 -->
+                <div class="setting-group">
+                    <label class="setting-label">アニメーション効果:</label>
+                    <select id="animationStyle" class="animation-select">
+                        <option value="fade">フェード</option>
+                        <option value="slide">スライド</option>
+                        <option value="scale">スケール</option>
+                        <option value="rotate">回転</option>
+                        <option value="bounce">バウンス</option>
+                    </select>
+                    <div class="animation-settings">
+                        <div class="slider-group">
+                            <label>フェード速度: <span id="fadeSpeedValue">0.3</span>秒</label>
+                            <input type="range" id="fadeSpeedSlider" min="0.1" max="1" step="0.1" value="0.3" class="slider">
+                        </div>
+                        <div class="slider-group">
+                            <label>持続時間調整: <span id="durationOffsetValue">0</span>秒</label>
+                            <input type="range" id="durationOffsetSlider" min="-1" max="2" step="0.1" value="0" class="slider">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- フォント設定 -->
+                <div class="setting-group">
+                    <label class="setting-label">フォント設定:</label>
+                    <div class="font-settings">
+                        <div class="font-size-group">
+                            <input type="number" id="fontSize" value="48" min="20" max="120" class="font-input">
+                            <span>px</span>
+                        </div>
+                        <div class="color-group">
+                            <label>文字色</label>
+                            <input type="color" id="fontColor" value="#FFFFFF">
+                        </div>
+                        <div class="color-group">
+                            <label>縁取り</label>
+                            <input type="color" id="strokeColor" value="#000000">
+                        </div>
+                        <div class="stroke-width-group">
+                            <label>縁取り幅: <span id="strokeWidthValue">2</span>px</label>
+                            <input type="range" id="strokeWidthSlider" min="0" max="5" value="2" class="slider">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- フォーマット選択 -->
             <div class="format-selector">
                 <div class="format-option selected" data-format="youtube">
@@ -349,6 +649,19 @@
         let uploadedFiles = { mp3: null };
         let lyricsData = [];
         
+        // 表示設定のデフォルト値
+        let displaySettings = {
+            position: 'bottom',
+            yOffset: 0,
+            animationStyle: 'fade',
+            fadeSpeed: 0.3,
+            durationOffset: 0,
+            fontSize: 48,
+            fontColor: '#FFFFFF',
+            strokeColor: '#000000',
+            strokeWidth: 2
+        };
+        
         // DOM要素
         const mp3Upload = document.getElementById('mp3Upload');
         const mp3Input = document.getElementById('mp3Input');
@@ -369,6 +682,99 @@
         const previewLyrics = document.getElementById('previewLyrics');
         const formatLabel = document.getElementById('formatLabel');
         const closePreview = document.getElementById('closePreview');
+        
+        // 設定コントロールの初期化
+        function initializeSettingControls() {
+            // Y軸スライダー
+            const yOffsetSlider = document.getElementById('yOffsetSlider');
+            const yOffsetValue = document.getElementById('yOffsetValue');
+            if (yOffsetSlider) {
+                yOffsetSlider.addEventListener('input', (e) => {
+                    displaySettings.yOffset = parseInt(e.target.value);
+                    yOffsetValue.textContent = e.target.value;
+                });
+            }
+            
+            // 位置選択
+            document.querySelectorAll('input[name="position"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    displaySettings.position = e.target.value;
+                });
+            });
+            
+            // アニメーションスタイル
+            const animationStyle = document.getElementById('animationStyle');
+            if (animationStyle) {
+                animationStyle.addEventListener('change', (e) => {
+                    displaySettings.animationStyle = e.target.value;
+                });
+            }
+            
+            // フェード速度
+            const fadeSpeedSlider = document.getElementById('fadeSpeedSlider');
+            const fadeSpeedValue = document.getElementById('fadeSpeedValue');
+            if (fadeSpeedSlider) {
+                fadeSpeedSlider.addEventListener('input', (e) => {
+                    displaySettings.fadeSpeed = parseFloat(e.target.value);
+                    fadeSpeedValue.textContent = e.target.value;
+                });
+            }
+            
+            // 持続時間調整
+            const durationOffsetSlider = document.getElementById('durationOffsetSlider');
+            const durationOffsetValue = document.getElementById('durationOffsetValue');
+            if (durationOffsetSlider) {
+                durationOffsetSlider.addEventListener('input', (e) => {
+                    displaySettings.durationOffset = parseFloat(e.target.value);
+                    durationOffsetValue.textContent = e.target.value;
+                });
+            }
+            
+            // フォントサイズ
+            const fontSize = document.getElementById('fontSize');
+            if (fontSize) {
+                fontSize.addEventListener('input', (e) => {
+                    displaySettings.fontSize = parseInt(e.target.value);
+                });
+            }
+            
+            // フォント色
+            const fontColor = document.getElementById('fontColor');
+            if (fontColor) {
+                fontColor.addEventListener('input', (e) => {
+                    displaySettings.fontColor = e.target.value;
+                });
+            }
+            
+            // 縁取り色
+            const strokeColor = document.getElementById('strokeColor');
+            if (strokeColor) {
+                strokeColor.addEventListener('input', (e) => {
+                    displaySettings.strokeColor = e.target.value;
+                });
+            }
+            
+            // 縁取り幅
+            const strokeWidthSlider = document.getElementById('strokeWidthSlider');
+            const strokeWidthValue = document.getElementById('strokeWidthValue');
+            if (strokeWidthSlider) {
+                strokeWidthSlider.addEventListener('input', (e) => {
+                    displaySettings.strokeWidth = parseInt(e.target.value);
+                    strokeWidthValue.textContent = e.target.value;
+                });
+            }
+        }
+        
+        // リアルタイムプレビューの更新
+        function updatePreviewIfOpen() {
+            if (previewModal && previewModal.classList.contains('show')) {
+                // プレビューが開いている場合は更新
+                updateLyricsPreview();
+            }
+        }
+        
+        // 設定コントロールを初期化
+        initializeSettingControls();
         
         // MP3アップロード
         mp3Upload.addEventListener('click', () => mp3Input.click());
@@ -426,22 +832,115 @@
             lyricsData.forEach((item, index) => {
                 const lineDiv = document.createElement('div');
                 lineDiv.className = 'lyrics-line';
+                lineDiv.draggable = true;
+                lineDiv.dataset.index = index;
+                
                 lineDiv.innerHTML = `
+                    <span class="drag-handle">⋮⋮</span>
                     <span class="lyrics-text">${item.text}</span>
-                    <input type="text" class="time-input" value="${item.startTime.toFixed(1)}s" data-index="${index}">
+                    <div class="time-controls">
+                        <input type="range" class="time-slider" min="0" max="120" step="0.1" value="${item.startTime}" data-index="${index}">
+                        <input type="text" class="time-input" value="${item.startTime.toFixed(1)}s" data-index="${index}">
+                        <span class="duration-label">持続: ${(item.endTime - item.startTime).toFixed(1)}s</span>
+                    </div>
                 `;
                 
+                // タイミングスライダー
+                const timeSlider = lineDiv.querySelector('.time-slider');
                 const timeInput = lineDiv.querySelector('.time-input');
+                
+                timeSlider.addEventListener('input', (e) => {
+                    const newTime = parseFloat(e.target.value);
+                    const duration = lyricsData[index].endTime - lyricsData[index].startTime;
+                    lyricsData[index].startTime = newTime;
+                    lyricsData[index].endTime = newTime + duration;
+                    timeInput.value = newTime.toFixed(1) + 's';
+                    lineDiv.querySelector('.duration-label').textContent = `持続: ${duration.toFixed(1)}s`;
+                });
+                
                 timeInput.addEventListener('change', (e) => {
                     const newTime = parseFloat(e.target.value.replace('s', ''));
                     if (!isNaN(newTime)) {
+                        const duration = lyricsData[index].endTime - lyricsData[index].startTime;
                         lyricsData[index].startTime = newTime;
-                        lyricsData[index].endTime = newTime + 2.5;
+                        lyricsData[index].endTime = newTime + duration;
+                        timeSlider.value = newTime;
+                        lineDiv.querySelector('.duration-label').textContent = `持続: ${duration.toFixed(1)}s`;
                     }
                 });
                 
+                // ドラッグ&ドロップ
+                lineDiv.addEventListener('dragstart', handleDragStart);
+                lineDiv.addEventListener('dragover', handleDragOver);
+                lineDiv.addEventListener('drop', handleDrop);
+                lineDiv.addEventListener('dragend', handleDragEnd);
+                
                 timeline.appendChild(lineDiv);
             });
+        }
+        
+        // ドラッグ&ドロップハンドラー
+        let draggedElement = null;
+        let draggedIndex = null;
+        
+        function handleDragStart(e) {
+            draggedElement = this;
+            draggedIndex = parseInt(this.dataset.index);
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+        
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            
+            const afterElement = getDragAfterElement(timeline, e.clientY);
+            if (afterElement == null) {
+                timeline.appendChild(draggedElement);
+            } else {
+                timeline.insertBefore(draggedElement, afterElement);
+            }
+            return false;
+        }
+        
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            
+            const droppedIndex = Array.from(timeline.children).indexOf(draggedElement);
+            
+            // 配列内の要素を移動
+            const [removed] = lyricsData.splice(draggedIndex, 1);
+            lyricsData.splice(droppedIndex, 0, removed);
+            
+            // タイムラインを再描画
+            updateTimeline();
+            
+            return false;
+        }
+        
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            draggedElement = null;
+            draggedIndex = null;
+        }
+        
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.lyrics-line:not(.dragging)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
         
         // フォーマット選択
@@ -695,12 +1194,72 @@
             // コンテナのクラス設定
             previewContainer.className = `preview-container ${isVertical ? 'preview-vertical' : 'preview-youtube'}`;
             
-            // 歌詞のクラス設定
+            // 歌詞のクラス設定と位置調整
             previewLyrics.className = `preview-lyrics ${isVertical ? 'vertical' : 'youtube'}`;
             
-            // 最初の3行を表示
-            const displayLyrics = lyricsData.slice(0, 3);
-            previewLyrics.innerHTML = displayLyrics.map(line => `<div>${line.text}</div>`).join('');
+            // 位置の設定
+            let topPosition;
+            switch(displaySettings.position) {
+                case 'top':
+                    topPosition = '15%';
+                    break;
+                case 'center':
+                    topPosition = '50%';
+                    break;
+                case 'bottom':
+                default:
+                    topPosition = '85%';
+                    break;
+            }
+            
+            // Y軸オフセットを適用
+            const finalTop = `calc(${topPosition} + ${displaySettings.yOffset}px)`;
+            
+            previewLyrics.style.top = finalTop;
+            previewLyrics.style.transform = displaySettings.position === 'center' 
+                ? 'translate(-50%, -50%)' 
+                : 'translateX(-50%)';
+            
+            // フォント設定を適用
+            previewLyrics.style.fontSize = `${displaySettings.fontSize}px`;
+            previewLyrics.style.color = displaySettings.fontColor;
+            
+            // 縁取り設定
+            if (displaySettings.strokeWidth > 0) {
+                const shadow = Array(4).fill(
+                    `${displaySettings.strokeColor} 0px 0px ${displaySettings.strokeWidth}px`
+                ).join(', ');
+                previewLyrics.style.textShadow = shadow;
+            } else {
+                previewLyrics.style.textShadow = 'none';
+            }
+            
+            // アニメーション設定に応じた歌詞表示
+            let currentIndex = 0;
+            const animateLyrics = () => {
+                if (currentIndex >= Math.min(lyricsData.length, 3)) {
+                    currentIndex = 0;
+                }
+                
+                const line = lyricsData[currentIndex];
+                const lyricDiv = document.createElement('div');
+                lyricDiv.textContent = line.text;
+                lyricDiv.style.animation = `${displaySettings.animationStyle}In ${displaySettings.fadeSpeed}s ease-in-out`;
+                
+                previewLyrics.innerHTML = '';
+                previewLyrics.appendChild(lyricDiv);
+                
+                currentIndex++;
+            };
+            
+            // 最初の歌詞を表示
+            animateLyrics();
+            
+            // 定期的に歌詞を切り替え
+            if (window.previewInterval) {
+                clearInterval(window.previewInterval);
+            }
+            window.previewInterval = setInterval(animateLyrics, 2000);
             
             // フォーマットラベル
             formatLabel.textContent = format.toUpperCase();
@@ -709,14 +1268,29 @@
             previewModal.classList.add('show');
         }
         
+        // プレビュー更新関数
+        function updateLyricsPreview() {
+            if (previewModal && previewModal.classList.contains('show')) {
+                const selectedFormat = document.querySelector('.format-option.selected');
+                const format = selectedFormat ? selectedFormat.dataset.format : 'youtube';
+                showPreview(format);
+            }
+        }
+        
         // プレビューを閉じる
         closePreview.addEventListener('click', () => {
             previewModal.classList.remove('show');
+            if (window.previewInterval) {
+                clearInterval(window.previewInterval);
+            }
         });
         
         previewModal.addEventListener('click', (e) => {
             if (e.target === previewModal) {
                 previewModal.classList.remove('show');
+                if (window.previewInterval) {
+                    clearInterval(window.previewInterval);
+                }
             }
         });
         
@@ -757,6 +1331,9 @@
                 formData.append('mp3File', uploadedFiles.mp3);
                 formData.append('lyricsData', JSON.stringify(lyricsData));
                 formData.append('format', format);
+                
+                // 表示設定を追加
+                formData.append('displaySettings', JSON.stringify(displaySettings));
                 
                 // 動画の長さを計算
                 const maxEndTime = Math.max(...lyricsData.map(item => item.endTime));

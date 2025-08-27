@@ -26,6 +26,10 @@ interface DynamicLyricsProps {
   strokeColor?: string;
   strokeWidth?: number;
   position?: 'bottom' | 'center' | 'top';
+  yOffset?: number;
+  animationStyle?: 'fade' | 'slide' | 'scale' | 'rotate' | 'bounce';
+  fadeSpeed?: number;
+  durationOffset?: number;
 }
 
 const DynamicLyricsOverlay: React.FC<DynamicLyricsProps> = ({
@@ -38,6 +42,10 @@ const DynamicLyricsOverlay: React.FC<DynamicLyricsProps> = ({
   strokeColor = '#000000',
   strokeWidth = 2,
   position = format === 'youtube' ? 'bottom' : 'center',
+  yOffset = 0,
+  animationStyle = 'fade',
+  fadeSpeed = 0.3,
+  durationOffset = 0,
 }) => {
   // デバッグ用ログ
   console.log('DynamicLyricsOverlay props:', {
@@ -67,26 +75,33 @@ const DynamicLyricsOverlay: React.FC<DynamicLyricsProps> = ({
 
   const currentLyrics = getCurrentLyrics();
 
-  // 歌詞の位置を計算
+  // 歌詞の位置を計算（yOffsetを考慮）
   const getLyricsPosition = () => {
+    let basePosition: number;
     switch (position) {
       case 'top':
-        return height * 0.15;
+        basePosition = height * 0.15;
+        break;
       case 'center':
-        return height * 0.5;
+        basePosition = height * 0.5;
+        break;
       case 'bottom':
       default:
-        return height * 0.85;
+        basePosition = height * 0.85;
+        break;
     }
+    return basePosition + yOffset;
   };
 
   const lyricsY = getLyricsPosition();
 
   // アニメーション効果
   const getLineAnimation = (line: LyricsLine, index: number) => {
-    const lineStartFrame = line.startTime * fps;
-    const lineEndFrame = line.endTime * fps;
-    const animationDuration = 0.3 * fps; // 0.3秒のアニメーション
+    const adjustedStartTime = line.startTime + durationOffset;
+    const adjustedEndTime = line.endTime + durationOffset;
+    const lineStartFrame = adjustedStartTime * fps;
+    const lineEndFrame = adjustedEndTime * fps;
+    const animationDuration = fadeSpeed * fps; // fadeSpeedを使用
 
     // フェードイン
     const fadeIn = interpolate(

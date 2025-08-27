@@ -83,6 +83,7 @@ const server = http.createServer((req, res) => {
                 
                 const lyricsData = fields.lyricsData ? fields.lyricsData[0] : null;
                 const format = fields.format ? fields.format[0] : 'youtube';
+                const displaySettings = fields.displaySettings ? JSON.parse(fields.displaySettings[0]) : {};
                 const mp3File = files.mp3File ? files.mp3File[0] : null;
                 
                 if (!lyricsData) {
@@ -116,7 +117,16 @@ const server = http.createServer((req, res) => {
                 // propsをJSON形式で直接コマンドラインに渡す
                 const propsJson = JSON.stringify({
                     lyricsData: lyrics,
-                    format: format
+                    format: format,
+                    position: displaySettings.position || 'bottom',
+                    yOffset: displaySettings.yOffset || 0,
+                    animationStyle: displaySettings.animationStyle || 'fade',
+                    fadeSpeed: displaySettings.fadeSpeed || 0.3,
+                    durationOffset: displaySettings.durationOffset || 0,
+                    fontSize: displaySettings.fontSize || 48,
+                    fontColor: displaySettings.fontColor || '#FFFFFF',
+                    strokeColor: displaySettings.strokeColor || '#000000',
+                    strokeWidth: displaySettings.strokeWidth || 2
                 }).replace(/"/g, '\\"');
                 
                 const remotionCommand = [
