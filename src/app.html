@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歌詞動画ジェネレーター</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+        }
+        
+        .upload-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .upload-box {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+        
+        .upload-box:hover {
+            border-color: #667eea;
+            background: #f0f0ff;
+        }
+        
+        .upload-box.active {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        .upload-label {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .upload-hint {
+            font-size: 14px;
+            color: #999;
+        }
+        
+        .file-name {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .process-section {
+            margin: 40px 0;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .process-section.show {
+            display: block;
+        }
+        
+        .timeline-container {
+            margin: 20px 0;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .lyrics-line {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: #f0f0f0;
+            border-radius: 5px;
+            cursor: move;
+        }
+        
+        .lyrics-line:hover {
+            background: #e0e0e0;
+        }
+        
+        .lyrics-text {
+            flex: 1;
+            margin-right: 10px;
+        }
+        
+        .time-input {
+            width: 80px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .audio-player {
+            margin: 20px 0;
+            width: 100%;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .progress-bar.show {
+            display: block;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .format-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .format-option {
+            padding: 10px 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .format-option:hover {
+            border-color: #667eea;
+        }
+        
+        .format-option.selected {
+            border-color: #667eea;
+            background: #f0f0ff;
+        }
+        
+        /* 歌詞入力モーダル */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+        
+        .modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            animation: slideIn 0.3s;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            color: #333;
+        }
+        
+        .close-btn {
+            font-size: 30px;
+            color: #999;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+        
+        .close-btn:hover {
+            color: #333;
+        }
+        
+        .lyrics-textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            resize: vertical;
+            font-family: monospace;
+        }
+        
+        .lyrics-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .modal-footer {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .modal-hint {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { 
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 歌詞動画ジェネレーター</h1>
+        <p class="subtitle">MP3と歌詞から透明背景の歌詞動画を自動生成</p>
+        
+        <!-- ファイルアップロードセクション -->
+        <div class="upload-section">
+            <div class="upload-box" id="mp3Upload">
+                <div class="upload-icon">🎵</div>
+                <div class="upload-label">MP3ファイル</div>
+                <div class="upload-hint">クリックして選択</div>
+                <input type="file" id="mp3Input" accept="audio/mp3,audio/mpeg">
+                <div class="file-name" id="mp3FileName"></div>
+            </div>
+            
+            <div class="upload-box" id="lyricsUpload">
+                <div class="upload-icon">📝</div>
+                <div class="upload-label">歌詞テキスト</div>
+                <div class="upload-hint">クリックして入力 or Shift+クリックでファイル選択</div>
+                <input type="file" id="lyricsInput" accept="text/plain">
+                <div class="file-name" id="lyricsFileName"></div>
+            </div>
+            
+            <div class="upload-box" id="bgUpload">
+                <div class="upload-icon">🖼️</div>
+                <div class="upload-label">背景画像（オプション）</div>
+                <div class="upload-hint">JPG/PNG</div>
+                <input type="file" id="bgInput" accept="image/jpeg,image/png">
+                <div class="file-name" id="bgFileName"></div>
+            </div>
+        </div>
+        
+        <!-- 処理セクション -->
+        <div class="process-section" id="processSection">
+            <h2>🎯 タイミング調整</h2>
+            
+            <!-- オーディオプレーヤー -->
+            <audio controls class="audio-player" id="audioPlayer"></audio>
+            
+            <!-- フォーマット選択 -->
+            <div class="format-selector">
+                <div class="format-option selected" data-format="youtube">
+                    📺 YouTube (16:9)
+                </div>
+                <div class="format-option" data-format="tiktok">
+                    📱 TikTok (9:16)
+                </div>
+                <div class="format-option" data-format="instagram">
+                    📷 Instagram (9:16)
+                </div>
+            </div>
+            
+            <!-- タイムライン -->
+            <div class="timeline-container" id="timelineContainer">
+                <!-- 歌詞行が動的に追加される -->
+            </div>
+            
+            <!-- アクションボタン -->
+            <div class="action-buttons">
+                <button class="btn btn-secondary" id="autoSyncBtn">
+                    🤖 AI自動認識
+                </button>
+                <button class="btn btn-primary" id="previewBtn">
+                    👁️ プレビュー
+                </button>
+                <button class="btn btn-success" id="generateBtn">
+                    🎬 動画生成
+                </button>
+            </div>
+        </div>
+        
+        <!-- プログレスバー -->
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill">0%</div>
+        </div>
+    </div>
+    
+    <!-- 歌詞入力モーダル -->
+    <div class="modal" id="lyricsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">📝 歌詞を入力</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-hint">歌詞をコピー＆ペーストするか、直接入力してください（1行ずつ改行）</div>
+            <textarea class="lyrics-textarea" id="lyricsTextarea" placeholder="例：
+君の笑顔が
+世界を照らす
+明日へと続く
+この道を歩もう"></textarea>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelLyrics">キャンセル</button>
+                <button class="btn btn-primary" id="confirmLyrics">確定</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ファイルアップロードの処理
+        const mp3Upload = document.getElementById('mp3Upload');
+        const mp3Input = document.getElementById('mp3Input');
+        const mp3FileName = document.getElementById('mp3FileName');
+        
+        const lyricsUpload = document.getElementById('lyricsUpload');
+        const lyricsInput = document.getElementById('lyricsInput');
+        const lyricsFileName = document.getElementById('lyricsFileName');
+        
+        const bgUpload = document.getElementById('bgUpload');
+        const bgInput = document.getElementById('bgInput');
+        const bgFileName = document.getElementById('bgFileName');
+        
+        const processSection = document.getElementById('processSection');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const timelineContainer = document.getElementById('timelineContainer');
+        
+        let uploadedFiles = {
+            mp3: null,
+            lyrics: null,
+            background: null
+        };
+        
+        let lyricsData = [];
+        
+        // MP3アップロード
+        mp3Upload.addEventListener('click', () => mp3Input.click());
+        mp3Input.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                uploadedFiles.mp3 = file;
+                mp3FileName.textContent = file.name;
+                mp3Upload.classList.add('active');
+                
+                // オーディオプレーヤーに設定
+                const url = URL.createObjectURL(file);
+                audioPlayer.src = url;
+                
+                checkFilesAndShowProcess();
+            }
+        });
+        
+        // 歌詞アップロード（クリックでモーダル表示）
+        const lyricsModal = document.getElementById('lyricsModal');
+        const lyricsTextarea = document.getElementById('lyricsTextarea');
+        const closeModal = document.getElementById('closeModal');
+        const cancelLyrics = document.getElementById('cancelLyrics');
+        const confirmLyrics = document.getElementById('confirmLyrics');
+        
+        lyricsUpload.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Shiftキーを押しながらクリックした場合はファイル選択
+            if (e.shiftKey) {
+                lyricsInput.click();
+            } else {
+                // 通常クリックはモーダル表示
+                lyricsModal.classList.add('show');
+                lyricsTextarea.focus();
+            }
+        });
+        
+        // ファイル選択の処理
+        lyricsInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                uploadedFiles.lyrics = file;
+                lyricsFileName.textContent = file.name;
+                lyricsUpload.classList.add('active');
+                
+                // 歌詞を読み込んでタイムラインに表示
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const text = e.target.result;
+                    displayLyrics(text);
+                };
+                reader.readAsText(file);
+                
+                checkFilesAndShowProcess();
+            }
+        });
+        
+        // モーダルを閉じる
+        closeModal.addEventListener('click', () => {
+            lyricsModal.classList.remove('show');
+        });
+        
+        cancelLyrics.addEventListener('click', () => {
+            lyricsModal.classList.remove('show');
+        });
+        
+        // モーダル外クリックで閉じる
+        lyricsModal.addEventListener('click', (e) => {
+            if (e.target === lyricsModal) {
+                lyricsModal.classList.remove('show');
+            }
+        });
+        
+        // 歌詞確定
+        confirmLyrics.addEventListener('click', () => {
+            const text = lyricsTextarea.value.trim();
+            if (text) {
+                // テキストをファイルとして扱う
+                const blob = new Blob([text], { type: 'text/plain' });
+                uploadedFiles.lyrics = new File([blob], 'lyrics.txt', { type: 'text/plain' });
+                lyricsFileName.textContent = '直接入力した歌詞';
+                lyricsUpload.classList.add('active');
+                
+                displayLyrics(text);
+                checkFilesAndShowProcess();
+                lyricsModal.classList.remove('show');
+            } else {
+                alert('歌詞を入力してください');
+            }
+        });
+        
+        // 背景画像アップロード
+        bgUpload.addEventListener('click', () => bgInput.click());
+        bgInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                uploadedFiles.background = file;
+                bgFileName.textContent = file.name;
+                bgUpload.classList.add('active');
+            }
+        });
+        
+        // ファイルチェックと処理セクション表示
+        function checkFilesAndShowProcess() {
+            if (uploadedFiles.mp3 && uploadedFiles.lyrics) {
+                processSection.classList.add('show');
+            }
+        }
+        
+        // 歌詞をタイムラインに表示
+        function displayLyrics(text) {
+            const lines = text.split('\n').filter(line => line.trim());
+            timelineContainer.innerHTML = '';
+            lyricsData = [];
+            
+            lines.forEach((line, index) => {
+                const startTime = index * 3; // 仮のタイミング（3秒間隔）
+                lyricsData.push({
+                    text: line,
+                    startTime: startTime,
+                    endTime: startTime + 2.5
+                });
+                
+                const lineElement = document.createElement('div');
+                lineElement.className = 'lyrics-line';
+                lineElement.innerHTML = `
+                    <span class="lyrics-text">${line}</span>
+                    <input type="text" class="time-input" value="${startTime.toFixed(1)}s" data-index="${index}">
+                `;
+                timelineContainer.appendChild(lineElement);
+            });
+        }
+        
+        // AI自動認識ボタン
+        document.getElementById('autoSyncBtn').addEventListener('click', () => {
+            alert('AI自動認識機能を実行中...（実装予定）');
+            // ここにAI認識のロジックを実装
+        });
+        
+        // プレビューボタン
+        document.getElementById('previewBtn').addEventListener('click', () => {
+            alert('プレビュー機能（実装予定）');
+            // ここにプレビュー機能を実装
+        });
+        
+        // 動画生成ボタン
+        document.getElementById('generateBtn').addEventListener('click', () => {
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            progressBar.classList.add('show');
+            
+            // プログレスバーのアニメーション（デモ）
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                progressFill.style.width = progress + '%';
+                progressFill.textContent = progress + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        alert('動画生成完了！（実装予定）');
+                        progressBar.classList.remove('show');
+                    }, 500);
+                }
+            }, 200);
+        });
+        
+        // フォーマット選択
+        document.querySelectorAll('.format-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.format-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+            });
+        });
+    </script>
+</body>
+</html>
