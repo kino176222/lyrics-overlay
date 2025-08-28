@@ -261,6 +261,10 @@
             font-weight: bold;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
             width: 85%;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .preview-lyrics.youtube {
@@ -659,7 +663,7 @@
         <div class="preview-container" id="previewContainer">
             <div class="format-label" id="formatLabel">YOUTUBE</div>
             <div class="preview-lyrics" id="previewLyrics"></div>
-            <audio id="previewAudio" controls style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; display: none;"></audio>
+            <audio id="previewAudio" controls style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: 90%; display: none; z-index: 1001;"></audio>
             <button class="close-btn" id="closePreview">×</button>
         </div>
     </div>
@@ -1456,11 +1460,10 @@
                     break;
             }
             
-            const finalTop = `calc(${topPosition} + ${displaySettings.yOffset}px)`;
-            previewLyrics.style.top = finalTop;
-            previewLyrics.style.transform = displaySettings.position === 'center' 
-                ? 'translate(-50%, -50%)' 
-                : 'translateX(-50%)';
+            // CSSのbottom設定を使用するため、top設定を削除
+            // const finalTop = `calc(${topPosition} + ${displaySettings.yOffset}px)`;
+            // previewLyrics.style.top = finalTop;
+            previewLyrics.style.transform = 'translateX(-50%)'; // シンプルに横中央のみ
             
             // フォント設定
             previewLyrics.style.fontSize = `${displaySettings.fontSize}px`;
@@ -1531,15 +1534,10 @@
                         // アニメーションを一時的に無効化してテスト
                         // lyricDiv.style.animation = `${displaySettings.animationStyle}In ${displaySettings.fadeSpeed}s ease-in-out`;
                         
-                        // 強制的にスタイルを設定
-                        lyricDiv.style.position = 'absolute';
-                        lyricDiv.style.width = '100%';
-                        lyricDiv.style.zIndex = '1000';
+                        // シンプルなスタイル設定（親要素のFlexboxで中央配置）
                         lyricDiv.style.fontWeight = 'bold';
                         lyricDiv.style.textShadow = '2px 2px 4px rgba(0,0,0,0.8)';
-                        lyricDiv.style.left = '50%';
-                        lyricDiv.style.transform = 'translateX(-50%)';
-                        lyricDiv.style.top = '50%';
+                        lyricDiv.style.whiteSpace = 'nowrap'; // 改行を防ぐ
                         
                         previewLyrics.innerHTML = '';
                         previewLyrics.appendChild(lyricDiv);
