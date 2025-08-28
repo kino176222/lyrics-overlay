@@ -599,7 +599,7 @@
                             <label style="font-size: 14px; color: #666;">書体:</label>
                             <select id="fontFamily" class="font-select" style="padding: 5px; border-radius: 4px; border: 1px solid #dadce0;">
                                 <option value="'Hiragino Sans', 'ヒラギノ角ゴシック', sans-serif">ゴシック体</option>
-                                <option value="'Hiragino Mincho ProN', 'ヒラギノ明朝', serif">明朝体</option>
+                                <option value="'Hiragino Mincho ProN', 'ヒラギノ明朝', serif" selected>明朝体</option>
                                 <option value="'Hiragino Maru Gothic ProN', 'ヒラギノ丸ゴ', sans-serif">丸ゴシック</option>
                                 <option value="'Sawarabi Gothic', sans-serif">さわらびゴシック</option>
                                 <option value="'Noto Sans JP', sans-serif">Noto Sans JP</option>
@@ -611,16 +611,16 @@
                             </select>
                         </div>
                         <div class="font-size-group">
-                            <input type="number" id="fontSize" value="48" min="20" max="120" class="font-input">
+                            <input type="number" id="fontSize" value="34" min="20" max="120" class="font-input">
                             <span>px</span>
                         </div>
                         <div class="color-group">
                             <label>文字色</label>
-                            <input type="color" id="fontColor" value="#FFFFFF">
+                            <input type="color" id="fontColor" value="#000000">
                         </div>
                         <div class="color-group">
                             <label>縁取り</label>
-                            <input type="color" id="strokeColor" value="#000000">
+                            <input type="color" id="strokeColor" value="#FFFFFF">
                         </div>
                         <div class="stroke-width-group">
                             <label>縁取り幅: <span id="strokeWidthValue">2</span>px</label>
@@ -680,10 +680,10 @@
             animationStyle: 'fade',
             fadeSpeed: 0.3,
             durationOffset: 0,
-            fontSize: 48,
-            fontFamily: "'Hiragino Sans', 'ヒラギノ角ゴシック', sans-serif",
-            fontColor: '#FFFFFF',
-            strokeColor: '#000000',
+            fontSize: 34,  // 48→34に変更
+            fontFamily: "'Hiragino Mincho ProN', 'ヒラギノ明朝', serif",  // 明朝体に変更
+            fontColor: '#000000',  // 白→黒に変更
+            strokeColor: '#FFFFFF',  // 黒→白に変更
             strokeWidth: 2
         };
         
@@ -864,8 +864,20 @@
         }
         
         // タイムライン更新
-        function updateTimeline() {
+        async function updateTimeline() {
             timeline.innerHTML = '';
+            
+            // 音声の長さを取得（デフォルトは180秒）
+            let maxDuration = 180;
+            if (uploadedFiles.mp3) {
+                try {
+                    maxDuration = await getAudioDuration(uploadedFiles.mp3);
+                    console.log('音声長さ取得:', maxDuration + '秒');
+                } catch (e) {
+                    console.error('音声長さ取得エラー:', e);
+                }
+            }
+            
             lyricsData.forEach((item, index) => {
                 const lineDiv = document.createElement('div');
                 lineDiv.className = 'lyrics-line';
@@ -876,23 +888,53 @@
                     <span class="drag-handle">⋮⋮</span>
                     <span class="lyrics-text">${item.text}</span>
                     <div class="time-controls">
-                        <input type="range" class="time-slider" min="0" max="120" step="0.1" value="${item.startTime}" data-index="${index}">
-                        <input type="text" class="time-input" value="${item.startTime.toFixed(1)}s" data-index="${index}">
-                        <span class="duration-label">持続: ${(item.endTime - item.startTime).toFixed(1)}s</span>
+                        <button class="time-adjust-btn minus" data-index="${index}" style="padding: 2px 8px; font-size: 18px; cursor: pointer;">−</button>
+                        <input type="range" class="time-slider" min="0" max="${maxDuration}" step="0.1" value="${item.startTime}" data-index="${index}">
+                        <button class="time-adjust-btn plus" data-index="${index}" style="padding: 2px 8px; font-size: 18px; cursor: pointer;">＋</button>
+                        <input type="text" class="time-input" value="${item.startTime.toFixed(1)}s" data-index="${index}" style="margin-left: 5px;">
+                        <span class="duration-label">持続:</span>
+                        <input type="text" class="duration-input" value="${(item.endTime - item.startTime).toFixed(1)}" data-index="${index}" style="width: 50px; text-align: center;">
+                        <span>s</span>
                     </div>
                 `;
                 
                 // タイミングスライダー
                 const timeSlider = lineDiv.querySelector('.time-slider');
                 const timeInput = lineDiv.querySelector('.time-input');
+                const minusBtn = lineDiv.querySelector('.time-adjust-btn.minus');
+                const plusBtn = lineDiv.querySelector('.time-adjust-btn.plus');
+                const durationInput = lineDiv.querySelector('.duration-input');
                 
+                // スライダーイベント
                 timeSlider.addEventListener('input', (e) => {
                     const newTime = parseFloat(e.target.value);
                     const duration = lyricsData[index].endTime - lyricsData[index].startTime;
                     lyricsData[index].startTime = newTime;
                     lyricsData[index].endTime = newTime + duration;
                     timeInput.value = newTime.toFixed(1) + 's';
-                    lineDiv.querySelector('.duration-label').textContent = `持続: ${duration.toFixed(1)}s`;
+                    // durationInputは変更しない（持続時間は維持）
+                });
+                
+                // マイナスボタン（-0.1秒）
+                minusBtn.addEventListener('click', () => {
+                    const currentTime = lyricsData[index].startTime;
+                    const newTime = Math.max(0, currentTime - 0.1);
+                    const duration = lyricsData[index].endTime - lyricsData[index].startTime;
+                    lyricsData[index].startTime = newTime;
+                    lyricsData[index].endTime = newTime + duration;
+                    timeSlider.value = newTime;
+                    timeInput.value = newTime.toFixed(1) + 's';
+                });
+                
+                // プラスボタン（+0.1秒）
+                plusBtn.addEventListener('click', () => {
+                    const currentTime = lyricsData[index].startTime;
+                    const newTime = Math.min(maxDuration, currentTime + 0.1);
+                    const duration = lyricsData[index].endTime - lyricsData[index].startTime;
+                    lyricsData[index].startTime = newTime;
+                    lyricsData[index].endTime = newTime + duration;
+                    timeSlider.value = newTime;
+                    timeInput.value = newTime.toFixed(1) + 's';
                 });
                 
                 timeInput.addEventListener('change', (e) => {
@@ -902,7 +944,19 @@
                         lyricsData[index].startTime = newTime;
                         lyricsData[index].endTime = newTime + duration;
                         timeSlider.value = newTime;
-                        lineDiv.querySelector('.duration-label').textContent = `持続: ${duration.toFixed(1)}s`;
+                        // durationInputは変更しない（持続時間は維持）
+                    }
+                });
+                
+                // 持続時間の変更
+                durationInput.addEventListener('change', (e) => {
+                    const newDuration = parseFloat(e.target.value);
+                    if (!isNaN(newDuration) && newDuration > 0) {
+                        lyricsData[index].endTime = lyricsData[index].startTime + newDuration;
+                        durationInput.value = newDuration.toFixed(1);
+                    } else {
+                        // 無効な値の場合は元に戻す
+                        durationInput.value = (lyricsData[index].endTime - lyricsData[index].startTime).toFixed(1);
                     }
                 });
                 
