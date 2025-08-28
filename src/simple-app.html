@@ -565,7 +565,9 @@
                     </div>
                     <div class="position-fine-tune">
                         <label>Y軸微調整: <span id="yOffsetValue">0</span>px</label>
+                        <button class="adjust-btn minus" id="yOffsetMinus" style="padding: 2px 8px;">−</button>
                         <input type="range" id="yOffsetSlider" min="-100" max="100" value="0" class="slider">
+                        <button class="adjust-btn plus" id="yOffsetPlus" style="padding: 2px 8px;">＋</button>
                     </div>
                 </div>
                 
@@ -582,7 +584,9 @@
                     <div class="animation-settings">
                         <div class="slider-group">
                             <label>フェード速度: <span id="fadeSpeedValue">0.3</span>秒</label>
+                            <button class="adjust-btn minus" id="fadeSpeedMinus" style="padding: 2px 8px;">−</button>
                             <input type="range" id="fadeSpeedSlider" min="0.1" max="1" step="0.1" value="0.3" class="slider">
+                            <button class="adjust-btn plus" id="fadeSpeedPlus" style="padding: 2px 8px;">＋</button>
                         </div>
                         <div class="slider-group">
                             <label>持続時間調整: <span id="durationOffsetValue">0</span>秒</label>
@@ -624,7 +628,21 @@
                         </div>
                         <div class="stroke-width-group">
                             <label>縁取り幅: <span id="strokeWidthValue">2</span>px</label>
-                            <input type="range" id="strokeWidthSlider" min="0" max="5" value="2" class="slider">
+                            <button class="adjust-btn minus" id="strokeWidthMinus" style="padding: 2px 8px;">−</button>
+                            <input type="range" id="strokeWidthSlider" min="0" max="5" step="0.5" value="2" class="slider">
+                            <button class="adjust-btn plus" id="strokeWidthPlus" style="padding: 2px 8px;">＋</button>
+                        </div>
+                        <div class="blur-group" style="margin-top: 10px;">
+                            <label>ぼかし効果:</label>
+                            <select id="blurType" style="padding: 5px; border-radius: 4px; border: 1px solid #dadce0;">
+                                <option value="none">なし</option>
+                                <option value="soft" selected>ソフト</option>
+                                <option value="medium">ミディアム</option>
+                                <option value="strong">ストロング</option>
+                                <option value="glow">グロー</option>
+                            </select>
+                            <label style="margin-left: 10px;">強度: <span id="blurStrengthValue">4</span>px</label>
+                            <input type="range" id="blurStrengthSlider" min="0" max="20" value="4" class="slider" style="width: 100px;">
                         </div>
                     </div>
                 </div>
@@ -684,7 +702,9 @@
             fontFamily: "'Hiragino Mincho ProN', 'ヒラギノ明朝', serif",  // 明朝体に変更
             fontColor: '#000000',  // 白→黒に変更
             strokeColor: '#FFFFFF',  // 黒→白に変更
-            strokeWidth: 2
+            strokeWidth: 2,
+            blurType: 'soft',
+            blurStrength: 4
         };
         
         // DOM要素
@@ -710,13 +730,30 @@
         
         // 設定コントロールの初期化
         function initializeSettingControls() {
-            // Y軸スライダー
+            // Y軸スライダーと±ボタン
             const yOffsetSlider = document.getElementById('yOffsetSlider');
             const yOffsetValue = document.getElementById('yOffsetValue');
+            const yOffsetMinus = document.getElementById('yOffsetMinus');
+            const yOffsetPlus = document.getElementById('yOffsetPlus');
+            
             if (yOffsetSlider) {
                 yOffsetSlider.addEventListener('input', (e) => {
                     displaySettings.yOffset = parseInt(e.target.value);
                     yOffsetValue.textContent = e.target.value;
+                });
+                
+                yOffsetMinus.addEventListener('click', () => {
+                    const newValue = Math.max(-100, displaySettings.yOffset - 5);
+                    displaySettings.yOffset = newValue;
+                    yOffsetSlider.value = newValue;
+                    yOffsetValue.textContent = newValue;
+                });
+                
+                yOffsetPlus.addEventListener('click', () => {
+                    const newValue = Math.min(100, displaySettings.yOffset + 5);
+                    displaySettings.yOffset = newValue;
+                    yOffsetSlider.value = newValue;
+                    yOffsetValue.textContent = newValue;
                 });
             }
             
@@ -735,13 +772,30 @@
                 });
             }
             
-            // フェード速度
+            // フェード速度と±ボタン
             const fadeSpeedSlider = document.getElementById('fadeSpeedSlider');
             const fadeSpeedValue = document.getElementById('fadeSpeedValue');
+            const fadeSpeedMinus = document.getElementById('fadeSpeedMinus');
+            const fadeSpeedPlus = document.getElementById('fadeSpeedPlus');
+            
             if (fadeSpeedSlider) {
                 fadeSpeedSlider.addEventListener('input', (e) => {
                     displaySettings.fadeSpeed = parseFloat(e.target.value);
                     fadeSpeedValue.textContent = e.target.value;
+                });
+                
+                fadeSpeedMinus.addEventListener('click', () => {
+                    const newValue = Math.max(0.1, displaySettings.fadeSpeed - 0.1);
+                    displaySettings.fadeSpeed = newValue;
+                    fadeSpeedSlider.value = newValue;
+                    fadeSpeedValue.textContent = newValue.toFixed(1);
+                });
+                
+                fadeSpeedPlus.addEventListener('click', () => {
+                    const newValue = Math.min(1, displaySettings.fadeSpeed + 0.1);
+                    displaySettings.fadeSpeed = newValue;
+                    fadeSpeedSlider.value = newValue;
+                    fadeSpeedValue.textContent = newValue.toFixed(1);
                 });
             }
             
@@ -788,15 +842,88 @@
                 });
             }
             
-            // 縁取り幅
+            // 縁取り幅と±ボタン
             const strokeWidthSlider = document.getElementById('strokeWidthSlider');
             const strokeWidthValue = document.getElementById('strokeWidthValue');
+            const strokeWidthMinus = document.getElementById('strokeWidthMinus');
+            const strokeWidthPlus = document.getElementById('strokeWidthPlus');
+            
             if (strokeWidthSlider) {
                 strokeWidthSlider.addEventListener('input', (e) => {
-                    displaySettings.strokeWidth = parseInt(e.target.value);
+                    displaySettings.strokeWidth = parseFloat(e.target.value);
                     strokeWidthValue.textContent = e.target.value;
                 });
+                
+                strokeWidthMinus.addEventListener('click', () => {
+                    const newValue = Math.max(0, displaySettings.strokeWidth - 0.5);
+                    displaySettings.strokeWidth = newValue;
+                    strokeWidthSlider.value = newValue;
+                    strokeWidthValue.textContent = newValue;
+                });
+                
+                strokeWidthPlus.addEventListener('click', () => {
+                    const newValue = Math.min(5, displaySettings.strokeWidth + 0.5);
+                    displaySettings.strokeWidth = newValue;
+                    strokeWidthSlider.value = newValue;
+                    strokeWidthValue.textContent = newValue;
+                });
             }
+            
+            // ぼかし効果
+            const blurType = document.getElementById('blurType');
+            const blurStrengthSlider = document.getElementById('blurStrengthSlider');
+            const blurStrengthValue = document.getElementById('blurStrengthValue');
+            
+            if (blurType) {
+                blurType.addEventListener('change', (e) => {
+                    displaySettings.blurType = e.target.value;
+                });
+                
+                blurStrengthSlider.addEventListener('input', (e) => {
+                    displaySettings.blurStrength = parseInt(e.target.value);
+                    blurStrengthValue.textContent = e.target.value;
+                });
+            }
+        }
+        
+        // テキストシャドウ生成関数
+        function createTextShadow(settings) {
+            const shadows = [];
+            
+            // 縁取り効果
+            if (settings.strokeWidth > 0) {
+                const strokeShadows = [
+                    `${settings.strokeColor} 0px 0px ${settings.strokeWidth}px`,
+                    `${settings.strokeColor} 0px 0px ${settings.strokeWidth}px`,
+                    `${settings.strokeColor} 0px 0px ${settings.strokeWidth}px`,
+                    `${settings.strokeColor} 0px 0px ${settings.strokeWidth}px`
+                ];
+                shadows.push(...strokeShadows);
+            }
+            
+            // ぼかし効果
+            if (settings.blurType !== 'none' && settings.blurStrength > 0) {
+                let blurShadow = '';
+                switch (settings.blurType) {
+                    case 'soft':
+                        blurShadow = `rgba(0,0,0,0.3) 2px 2px ${settings.blurStrength}px`;
+                        break;
+                    case 'medium':
+                        blurShadow = `rgba(0,0,0,0.5) 3px 3px ${settings.blurStrength * 1.5}px`;
+                        break;
+                    case 'strong':
+                        blurShadow = `rgba(0,0,0,0.8) 4px 4px ${settings.blurStrength * 2}px`;
+                        break;
+                    case 'glow':
+                        // グロー効果は明るい色で
+                        const glowColor = settings.fontColor === '#000000' ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,100,0.8)';
+                        blurShadow = `${glowColor} 0px 0px ${settings.blurStrength * 2}px`;
+                        break;
+                }
+                if (blurShadow) shadows.push(blurShadow);
+            }
+            
+            return shadows.length > 0 ? shadows.join(', ') : 'none';
         }
         
         // リアルタイムプレビューの更新
@@ -1328,15 +1455,8 @@
             previewLyrics.style.fontFamily = displaySettings.fontFamily;
             previewLyrics.style.color = displaySettings.fontColor;
             
-            // 縁取り設定
-            if (displaySettings.strokeWidth > 0) {
-                const shadow = Array(4).fill(
-                    `${displaySettings.strokeColor} 0px 0px ${displaySettings.strokeWidth}px`
-                ).join(', ');
-                previewLyrics.style.textShadow = shadow;
-            } else {
-                previewLyrics.style.textShadow = 'none';
-            }
+            // 縁取りとぼかし設定
+            previewLyrics.style.textShadow = createTextShadow(displaySettings);
             
             // オーディオ要素を非表示
             const audio = document.getElementById('previewAudio');
@@ -1524,13 +1644,8 @@
             previewLyrics.style.fontFamily = displaySettings.fontFamily;
             previewLyrics.style.color = displaySettings.fontColor;
             
-            // 縁取り設定
-            if (displaySettings.strokeWidth > 0) {
-                const shadow = Array(4).fill(
-                    `${displaySettings.strokeColor} 0px 0px ${displaySettings.strokeWidth}px`
-                ).join(', ');
-                previewLyrics.style.textShadow = shadow;
-            }
+            // 縁取りとぼかし設定
+            previewLyrics.style.textShadow = createTextShadow(displaySettings);
             
             // オーディオ要素の設定
             const audio = document.getElementById('previewAudio');
@@ -1590,7 +1705,7 @@
                         
                         // シンプルなスタイル設定（親要素のFlexboxで中央配置）
                         lyricDiv.style.fontWeight = 'bold';
-                        lyricDiv.style.textShadow = '2px 2px 4px rgba(0,0,0,0.8)';
+                        lyricDiv.style.textShadow = createTextShadow(displaySettings);
                         lyricDiv.style.whiteSpace = 'nowrap'; // 改行を防ぐ
                         
                         previewLyrics.innerHTML = '';
