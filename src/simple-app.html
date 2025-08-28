@@ -243,13 +243,13 @@
         }
         
         .preview-youtube {
-            width: 480px;
-            height: 270px;
+            width: 960px;
+            height: 540px;
         }
         
         .preview-vertical {
-            width: 300px;
-            height: 533px;
+            width: 540px;
+            height: 960px;
         }
         
         .preview-lyrics {
@@ -265,13 +265,13 @@
         
         .preview-lyrics.youtube {
             bottom: 15%;
-            font-size: 24px;
+            font-size: 48px;
         }
         
         .preview-lyrics.vertical {
             top: 50%;
             transform: translate(-50%, -50%);
-            font-size: 20px;
+            font-size: 36px;
         }
         
         .format-label {
@@ -591,6 +591,21 @@
                 <div class="setting-group">
                     <label class="setting-label">フォント設定:</label>
                     <div class="font-settings">
+                        <div class="font-family-group" style="margin-bottom: 10px;">
+                            <label style="font-size: 14px; color: #666;">書体:</label>
+                            <select id="fontFamily" class="font-select" style="padding: 5px; border-radius: 4px; border: 1px solid #dadce0;">
+                                <option value="'Hiragino Sans', 'ヒラギノ角ゴシック', sans-serif">ゴシック体</option>
+                                <option value="'Hiragino Mincho ProN', 'ヒラギノ明朝', serif">明朝体</option>
+                                <option value="'Hiragino Maru Gothic ProN', 'ヒラギノ丸ゴ', sans-serif">丸ゴシック</option>
+                                <option value="'Sawarabi Gothic', sans-serif">さわらびゴシック</option>
+                                <option value="'Noto Sans JP', sans-serif">Noto Sans JP</option>
+                                <option value="'M PLUS Rounded 1c', sans-serif">M+ Rounded</option>
+                                <option value="'Kosugi Maru', sans-serif">小杉丸ゴシック</option>
+                                <option value="'Zen Maru Gothic', sans-serif">Zen 丸ゴシック</option>
+                                <option value="'Arial', sans-serif">Arial (英語)</option>
+                                <option value="'Times New Roman', serif">Times (英語)</option>
+                            </select>
+                        </div>
                         <div class="font-size-group">
                             <input type="number" id="fontSize" value="48" min="20" max="120" class="font-input">
                             <span>px</span>
@@ -629,7 +644,11 @@
             <!-- ボタン -->
             <div class="buttons">
                 <button class="btn btn-secondary" id="autoSyncBtn">🤖 AI自動認識</button>
+                <button class="btn btn-secondary" id="resetTimingBtn">🔄 タイミングリセット</button>
+                <button class="btn btn-secondary" id="testTimingBtn">🧪 テストタイミング（0秒から）</button>
                 <button class="btn btn-primary" id="previewBtn">👁️ プレビュー</button>
+                <button class="btn btn-primary" id="realtimePreviewBtn">🎵 音声同期プレビュー</button>
+                <button class="btn btn-secondary" id="debugTimingBtn">🔍 タイミング確認</button>
                 <button class="btn btn-primary" id="generateBtn">🎬 動画生成</button>
             </div>
         </div>
@@ -640,6 +659,7 @@
         <div class="preview-container" id="previewContainer">
             <div class="format-label" id="formatLabel">YOUTUBE</div>
             <div class="preview-lyrics" id="previewLyrics"></div>
+            <audio id="previewAudio" controls style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; display: none;"></audio>
             <button class="close-btn" id="closePreview">×</button>
         </div>
     </div>
@@ -657,6 +677,7 @@
             fadeSpeed: 0.3,
             durationOffset: 0,
             fontSize: 48,
+            fontFamily: "'Hiragino Sans', 'ヒラギノ角ゴシック', sans-serif",
             fontColor: '#FFFFFF',
             strokeColor: '#000000',
             strokeWidth: 2
@@ -730,6 +751,15 @@
                 });
             }
             
+            // フォントファミリー
+            const fontFamily = document.getElementById('fontFamily');
+            if (fontFamily) {
+                fontFamily.addEventListener('change', (e) => {
+                    displaySettings.fontFamily = e.target.value;
+                    console.log('フォント変更:', displaySettings.fontFamily);
+                });
+            }
+            
             // フォントサイズ
             const fontSize = document.getElementById('fontSize');
             if (fontSize) {
@@ -798,11 +828,14 @@
             const text = lyricsTextarea.value.trim();
             if (text) {
                 const lines = text.split('\n').filter(line => line.trim());
+                // 3秒から開始、各行3秒間隔で配置
                 lyricsData = lines.map((line, index) => ({
                     text: line.trim(),
-                    startTime: index * 3,
-                    endTime: (index * 3) + 2.5
+                    startTime: 3 + (index * 3),
+                    endTime: 3 + (index * 3) + 2.5
                 }));
+                
+                console.log('歌詞データ作成完了:', lyricsData);
                 
                 lyricsStatus.textContent = `${lines.length}行の歌詞`;
                 lyricsUpload.classList.add('active');
@@ -1126,13 +1159,18 @@
             const timings = [];
             const vocalSegments = audioFeatures.vocalSegments;
             
-            if (vocalSegments.length === 0) {
-                // フォールバック: 均等配分
-                const interval = duration / lyricsCount;
+            // より保守的なアプローチ：最初の歌詞は必ず早めに開始
+            const startOffset = 3; // 3秒から開始
+            const endOffset = 3; // 最後の3秒は空ける
+            const availableDuration = Math.max(duration - startOffset - endOffset, lyricsCount * 2);
+            
+            if (vocalSegments.length === 0 || vocalSegments[0].start > 20) {
+                // フォールバック: 均等配分（3秒から開始）
+                const interval = availableDuration / lyricsCount;
                 for (let i = 0; i < lyricsCount; i++) {
                     timings.push({
-                        startTime: i * interval,
-                        endTime: (i + 1) * interval - 0.3,
+                        startTime: startOffset + (i * interval),
+                        endTime: startOffset + ((i + 1) * interval) - 0.3,
                         confidence: 0.3
                     });
                 }
@@ -1189,6 +1227,13 @@
         
         // プレビュー表示
         function showPreview(format) {
+            console.log('通常プレビュー開始:', { format, lyricsData: lyricsData.length });
+            
+            if (lyricsData.length === 0) {
+                alert('歌詞データがありません');
+                return;
+            }
+            
             const isVertical = format === 'tiktok';
             
             // コンテナのクラス設定
@@ -1222,6 +1267,7 @@
             
             // フォント設定を適用
             previewLyrics.style.fontSize = `${displaySettings.fontSize}px`;
+            previewLyrics.style.fontFamily = displaySettings.fontFamily;
             previewLyrics.style.color = displaySettings.fontColor;
             
             // 縁取り設定
@@ -1233,6 +1279,10 @@
             } else {
                 previewLyrics.style.textShadow = 'none';
             }
+            
+            // オーディオ要素を非表示
+            const audio = document.getElementById('previewAudio');
+            audio.style.display = 'none';
             
             // アニメーション設定に応じた歌詞表示
             let currentIndex = 0;
@@ -1283,6 +1333,11 @@
             if (window.previewInterval) {
                 clearInterval(window.previewInterval);
             }
+            const audio = document.getElementById('previewAudio');
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
         });
         
         previewModal.addEventListener('click', (e) => {
@@ -1291,8 +1346,238 @@
                 if (window.previewInterval) {
                     clearInterval(window.previewInterval);
                 }
+                const audio = document.getElementById('previewAudio');
+                if (audio) {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }
             }
         });
+
+        // 音声同期プレビュー
+        document.getElementById('realtimePreviewBtn').addEventListener('click', () => {
+            if (!uploadedFiles.mp3 || lyricsData.length === 0) {
+                alert('MP3ファイルと歌詞データが必要です');
+                return;
+            }
+            
+            const selectedFormat = document.querySelector('.format-option.selected').dataset.format;
+            showRealtimePreview(selectedFormat);
+        });
+        
+        // タイミング確認ボタン
+        document.getElementById('debugTimingBtn').addEventListener('click', () => {
+            console.log('=== 現在の歌詞データとタイミング ===');
+            console.log(`歌詞数: ${lyricsData.length}行`);
+            lyricsData.forEach((item, index) => {
+                console.log(`${index + 1}. [${item.startTime.toFixed(2)}秒 ~ ${item.endTime.toFixed(2)}秒] ${item.text}`);
+            });
+            console.log('===============================');
+            alert(`歌詞タイミング情報をコンソールに出力しました。\nF12キーで開発者ツールを開いて確認してください。`);
+        });
+        
+        // テストタイミングボタン（0秒から開始）
+        document.getElementById('testTimingBtn').addEventListener('click', () => {
+            if (lyricsData.length === 0) {
+                alert('歌詞データがありません');
+                return;
+            }
+            
+            // 0秒から開始、2秒間隔
+            lyricsData = lyricsData.map((item, index) => ({
+                ...item,
+                startTime: index * 2,
+                endTime: (index * 2) + 1.8
+            }));
+            
+            updateTimeline();
+            console.log('テストタイミング設定完了（0秒から2秒間隔）');
+            alert('テストタイミングを設定しました（0秒から開始、2秒間隔）');
+        });
+        
+        // タイミングリセットボタン
+        document.getElementById('resetTimingBtn').addEventListener('click', async () => {
+            if (lyricsData.length === 0) {
+                alert('歌詞データがありません');
+                return;
+            }
+            
+            let totalDuration = 180; // デフォルト3分
+            
+            // MP3がアップロードされていれば長さを取得
+            if (uploadedFiles.mp3) {
+                try {
+                    totalDuration = await getAudioDuration(uploadedFiles.mp3);
+                } catch (e) {
+                    console.error('音声長さ取得エラー:', e);
+                }
+            }
+            
+            // シンプルに均等配分（最初の歌詞は5秒から開始）
+            const startOffset = 5; // 最初の歌詞は5秒から
+            const availableDuration = totalDuration - startOffset - 5; // 最後の5秒も空ける
+            const interval = availableDuration / lyricsData.length;
+            
+            lyricsData = lyricsData.map((item, index) => ({
+                ...item,
+                startTime: startOffset + (index * interval),
+                endTime: startOffset + ((index + 1) * interval) - 0.3
+            }));
+            
+            updateTimeline();
+            console.log('タイミングをリセットしました');
+            alert('タイミングをリセットしました（5秒から開始、均等配分）');
+        });
+
+        // 音声同期プレビュー表示
+        function showRealtimePreview(format) {
+            console.log('🎵 リアルタイムプレビュー開始');
+            console.log('歌詞データ:', lyricsData);
+            console.log('表示設定:', displaySettings);
+            
+            const isVertical = format === 'tiktok';
+            
+            // プレビューの基本設定
+            previewContainer.className = `preview-container ${isVertical ? 'preview-vertical' : 'preview-youtube'}`;
+            previewLyrics.className = `preview-lyrics ${isVertical ? 'vertical' : 'youtube'}`;
+            
+            // 位置設定
+            let topPosition;
+            switch(displaySettings.position) {
+                case 'top':
+                    topPosition = '15%';
+                    break;
+                case 'center':
+                    topPosition = '50%';
+                    break;
+                case 'bottom':
+                default:
+                    topPosition = '85%';
+                    break;
+            }
+            
+            const finalTop = `calc(${topPosition} + ${displaySettings.yOffset}px)`;
+            previewLyrics.style.top = finalTop;
+            previewLyrics.style.transform = displaySettings.position === 'center' 
+                ? 'translate(-50%, -50%)' 
+                : 'translateX(-50%)';
+            
+            // フォント設定
+            previewLyrics.style.fontSize = `${displaySettings.fontSize}px`;
+            previewLyrics.style.fontFamily = displaySettings.fontFamily;
+            previewLyrics.style.color = displaySettings.fontColor;
+            
+            // 縁取り設定
+            if (displaySettings.strokeWidth > 0) {
+                const shadow = Array(4).fill(
+                    `${displaySettings.strokeColor} 0px 0px ${displaySettings.strokeWidth}px`
+                ).join(', ');
+                previewLyrics.style.textShadow = shadow;
+            }
+            
+            // オーディオ要素の設定
+            const audio = document.getElementById('previewAudio');
+            const url = URL.createObjectURL(uploadedFiles.mp3);
+            audio.src = url;
+            audio.style.display = 'block';
+            
+            // 歌詞の同期表示
+            let currentLyricIndex = -1;
+            
+            // 既存のイベントリスナーを削除
+            audio.removeEventListener('timeupdate', audio._timeupdateHandler);
+            
+            // 新しいイベントハンドラーを定義（シンプルに書き直し）
+            audio._timeupdateHandler = () => {
+                const currentTime = audio.currentTime;
+                
+                // デバッグ: 最初の歌詞のタイミングを確認
+                if (currentTime < 1) {
+                    console.log(`⏱️ ${currentTime.toFixed(2)}秒 - 最初の歌詞は${lyricsData[0].startTime}秒から`);
+                }
+                
+                // 現在の時間に対応する歌詞を検索
+                let newIndex = -1;
+                for (let i = 0; i < lyricsData.length; i++) {
+                    if (currentTime >= lyricsData[i].startTime && currentTime < lyricsData[i].endTime) {
+                        newIndex = i;
+                        break;
+                    }
+                }
+                
+                // 歌詞が変わった場合のみ更新
+                if (newIndex !== currentLyricIndex) {
+                    currentLyricIndex = newIndex;
+                    
+                    if (newIndex >= 0) {
+                        const line = lyricsData[newIndex];
+                        console.log(`🎤 表示: [${currentTime.toFixed(2)}秒] ${line.text}`);
+                        
+                        // DOM要素の確認
+                        console.log('previewLyrics要素:', previewLyrics);
+                        console.log('previewLyrics可視性:', {
+                            display: getComputedStyle(previewLyrics).display,
+                            visibility: getComputedStyle(previewLyrics).visibility,
+                            opacity: getComputedStyle(previewLyrics).opacity
+                        });
+                        
+                        // 歌詞を表示
+                        const lyricDiv = document.createElement('div');
+                        lyricDiv.textContent = line.text;
+                        lyricDiv.style.color = displaySettings.fontColor;
+                        lyricDiv.style.fontSize = `${displaySettings.fontSize}px`;
+                        lyricDiv.style.fontFamily = displaySettings.fontFamily;
+                        lyricDiv.style.textAlign = 'center';
+                        // アニメーションを一時的に無効化してテスト
+                        // lyricDiv.style.animation = `${displaySettings.animationStyle}In ${displaySettings.fadeSpeed}s ease-in-out`;
+                        
+                        // 強制的にスタイルを設定
+                        lyricDiv.style.position = 'absolute';
+                        lyricDiv.style.width = '100%';
+                        lyricDiv.style.zIndex = '1000';
+                        lyricDiv.style.fontWeight = 'bold';
+                        lyricDiv.style.textShadow = '2px 2px 4px rgba(0,0,0,0.8)';
+                        lyricDiv.style.left = '50%';
+                        lyricDiv.style.transform = 'translateX(-50%)';
+                        lyricDiv.style.top = '50%';
+                        
+                        previewLyrics.innerHTML = '';
+                        previewLyrics.appendChild(lyricDiv);
+                        
+                        console.log('歌詞要素追加後:', previewLyrics.innerHTML);
+                    } else {
+                        // 歌詞がない時間帯
+                        if (previewLyrics.innerHTML !== '') {
+                            console.log(`🔇 クリア: [${currentTime.toFixed(2)}秒]`);
+                            previewLyrics.innerHTML = '';
+                        }
+                    }
+                }
+            };
+            
+            // イベントリスナーを登録
+            audio.addEventListener('timeupdate', audio._timeupdateHandler);
+            
+            // フォーマットラベル
+            formatLabel.textContent = format.toUpperCase() + ' (音声同期)';
+            
+            // モーダル表示
+            previewModal.classList.add('show');
+            
+            // モーダル状態の確認
+            console.log('モーダル表示状態:', {
+                modalClasses: previewModal.className,
+                modalDisplay: getComputedStyle(previewModal).display,
+                containerClasses: previewContainer.className,
+                lyricsClasses: previewLyrics.className
+            });
+            
+            // 自動再生開始
+            setTimeout(() => {
+                audio.play();
+                console.log('🎵 音声再生開始');
+            }, 500);
+        }
         
         // 動画生成
         document.getElementById('generateBtn').addEventListener('click', async () => {

@@ -124,6 +124,7 @@ const server = http.createServer((req, res) => {
                     fadeSpeed: displaySettings.fadeSpeed || 0.3,
                     durationOffset: displaySettings.durationOffset || 0,
                     fontSize: displaySettings.fontSize || 48,
+                    fontFamily: displaySettings.fontFamily || "'Hiragino Sans', sans-serif",
                     fontColor: displaySettings.fontColor || '#FFFFFF',
                     strokeColor: displaySettings.strokeColor || '#000000',
                     strokeWidth: displaySettings.strokeWidth || 2
