@@ -211,6 +211,7 @@ MP3と歌詞テキストから、YouTube/TikTok/Instagram用の歌詞動画を�
 | 日付 | 内容 | 作成者 |
 |------|------|--------|
 | 2025-08-27 | 初版作成 | Claude Code |
+| 2025-09-01 | 開発方針変更: Remotion Studio版への移行 | Claude Code |
 
 ---
 
@@ -232,3 +233,74 @@ node basic-server.js
 **アクセスURL:** http://localhost:3003/src/simple-app.html
 
 **注意:** `server.js` (ポート3002) は使用しない。混乱を避けるため。
+
+---
+
+## 🔄 開発方針変更 (2025-09-01)
+
+### 背景
+Web版歌詞動画ツール（`web-version/`）の開発中、以下の根本的な課題が判明：
+
+1. **プレビュー≠出力問題**: ブラウザプレビューとRemotion出力の完全一致が困難
+2. **2つのエンジン管理**: ChromeとRemotionの差異による無限調整
+3. **品質妥協**: textShadow vs WebkitTextStrokeなど、視覚品質の妥協が必要
+
+### 新しい開発方針: Remotion Studio版
+
+#### 🎯 目標
+**「MP3 + 歌詞 → 3分で完璧な歌詞動画」**
+
+#### 📂 新しいプロジェクト構成
+```
+lyrics-overlay/
+├── web-version/              ← 既存の作業（保存用）
+│   ├── src/simple-app.html   ← Webベースのツール
+│   ├── basic-server.js       ← Node.jsサーバー
+│   └── remotion.config.ts    ← Remotion設定
+│
+├── remotion-studio-version/  ← 新しい開発（メイン）
+│   ├── src/
+│   │   ├── LyricsEditor.tsx  ← 直感的編集コンポーネント
+│   │   └── Studio.tsx        ← Remotion Studio統合
+│   └── package.json          ← Remotion Studio専用設定
+│
+└── CLAUDE.md                 ← この要件定義書
+```
+
+#### 🎨 Remotion Studio版の特徴
+
+**完全なWYSIWYG体験：**
+- 🎵 音楽を聞きながらリアルタイム編集
+- 👁️ プレビュー = 出力の完全一致
+- 🖱️ マウスドラッグで直感操作
+
+**操作フロー：**
+1. MP3 + 歌詞テキストをドラッグ&ドロップ
+2. AI自動タイミング認識
+3. Remotion Studioで直感的調整
+   - フォントサイズ: スライダー操作
+   - タイミング: タイムライン上でドラッグ
+   - 位置: マウスで直接移動
+4. 複数フォーマット一括出力
+
+#### 🚀 期待される改善
+- **品質**: 妥協なしの完璧な仕上がり
+- **効率**: 設定調整の時間を95%削減
+- **直感性**: Final Cut ProやPhotoshop並みの操作感
+- **安定性**: 単一エンジンによる一貫した動作
+
+#### 📋 開発ステップ
+1. Remotion Studio環境構築
+2. 歌詞エディターコンポーネント実装
+3. 直感的なタイミング調整UI
+4. マルチフォーマット出力機能
+5. AI歌詞認識の統合
+
+### Web版の価値
+Web版での学習は無駄ではなく、以下の資産を活用：
+- 歌詞データ構造設計
+- AI認識ロジック
+- フォント・アニメーション設定
+- ユーザー体験の理解
+
+**次フェーズ:** `remotion-studio-version/` での本格開発開始
