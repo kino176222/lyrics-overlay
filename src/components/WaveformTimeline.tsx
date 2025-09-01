@@ -27,11 +27,43 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
   const audioRef = useRef<HTMLAudioElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const longPressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // 現在再生中の歌詞
   const currentLyricIndex = lyrics.findIndex(
     line => currentTime >= line.startTime && currentTime <= line.endTime
   );
+
+  // 長押し機能のヘルパー関数
+  const handleMouseDown = (action: () => void) => {
+    // 最初のクリック
+    action();
+    
+    // 長押し検知（500ms後）
+    pressTimerRef.current = setTimeout(() => {
+      // 高速連続実行（100msごと）
+      longPressIntervalRef.current = setInterval(action, 100);
+    }, 500);
+  };
+
+  const handleMouseUp = () => {
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+    if (longPressIntervalRef.current) {
+      clearInterval(longPressIntervalRef.current);
+      longPressIntervalRef.current = null;
+    }
+  };
+
+  // コンポーネントのクリーンアップ
+  useEffect(() => {
+    return () => {
+      handleMouseUp();
+    };
+  }, []);
 
   // 音声制御
   const togglePlay = () => {
@@ -130,9 +162,6 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
     onLyricsChange(newLyrics);
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(null);
-  };
 
   // テキスト処理
   const handleTextSubmit = (lyricsText: string) => {
@@ -1109,9 +1138,9 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
             lineHeight: '1.4'
           }}>
             <strong>📖 操作方法：</strong><br/>
-            • ±ボタン：0.1秒刻みで時間調整<br/>
+            • ±ボタン：0.1秒刻みで時間調整（長押しで高速調整）<br/>
             • 🎯ボタン：その時間にジャンプして確認<br/>
-            • ⏭️ボタン：次の歌詞の開始時間を自動設定<br/>
+            • ⏭️ボタン：次の歌詞の開始時間を自動設定（+3秒）<br/>
             • 青色：現在再生中 / 黄色：選択中
           </div>
           
@@ -1145,12 +1174,17 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
                 
                 {/* 開始時間調整 */}
                 <button
-                  onClick={(e) => {
+                  onMouseDown={(e) => {
                     e.stopPropagation();
-                    const newLyrics = [...lyrics];
-                    newLyrics[index].startTime = Math.max(0, newLyrics[index].startTime - 0.1);
-                    onLyricsChange(newLyrics);
+                    const action = () => {
+                      const newLyrics = [...lyrics];
+                      newLyrics[index].startTime = Math.max(0, newLyrics[index].startTime - 0.1);
+                      onLyricsChange(newLyrics);
+                    };
+                    handleMouseDown(action);
                   }}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
                   style={{
                     width: '18px',
                     height: '18px',
@@ -1164,6 +1198,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
                     alignItems: 'center',
                     justifyContent: 'center',
                     padding: 0,
+                    userSelect: 'none',
                   }}
                 >
                   −
@@ -1178,12 +1213,17 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
                   {line.startTime.toFixed(1)}
                 </span>
                 <button
-                  onClick={(e) => {
+                  onMouseDown={(e) => {
                     e.stopPropagation();
-                    const newLyrics = [...lyrics];
-                    newLyrics[index].startTime = Math.min(duration, newLyrics[index].startTime + 0.1);
-                    onLyricsChange(newLyrics);
+                    const action = () => {
+                      const newLyrics = [...lyrics];
+                      newLyrics[index].startTime = Math.min(duration, newLyrics[index].startTime + 0.1);
+                      onLyricsChange(newLyrics);
+                    };
+                    handleMouseDown(action);
                   }}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
                   style={{
                     width: '18px',
                     height: '18px',
@@ -1197,6 +1237,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
                     alignItems: 'center',
                     justifyContent: 'center',
                     padding: 0,
+                    userSelect: 'none',
                   }}
                 >
                   +
@@ -1206,12 +1247,17 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
                 
                 {/* 終了時間調整 */}
                 <button
-                  onClick={(e) => {
+                  onMouseDown={(e) => {
                     e.stopPropagation();
-                    const newLyrics = [...lyrics];
-                    newLyrics[index].endTime = Math.max(newLyrics[index].startTime + 0.1, newLyrics[index].endTime - 0.1);
-                    onLyricsChange(newLyrics);
+                    const action = () => {
+                      const newLyrics = [...lyrics];
+                      newLyrics[index].endTime = Math.max(newLyrics[index].startTime + 0.1, newLyrics[index].endTime - 0.1);
+                      onLyricsChange(newLyrics);
+                    };
+                    handleMouseDown(action);
                   }}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
                   style={{
                     width: '18px',
                     height: '18px',
@@ -1225,6 +1271,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
                     alignItems: 'center',
                     justifyContent: 'center',
                     padding: 0,
+                    userSelect: 'none',
                   }}
                 >
                   −
@@ -1239,12 +1286,17 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
                   {line.endTime.toFixed(1)}
                 </span>
                 <button
-                  onClick={(e) => {
+                  onMouseDown={(e) => {
                     e.stopPropagation();
-                    const newLyrics = [...lyrics];
-                    newLyrics[index].endTime = Math.min(duration, newLyrics[index].endTime + 0.1);
-                    onLyricsChange(newLyrics);
+                    const action = () => {
+                      const newLyrics = [...lyrics];
+                      newLyrics[index].endTime = Math.min(duration, newLyrics[index].endTime + 0.1);
+                      onLyricsChange(newLyrics);
+                    };
+                    handleMouseDown(action);
                   }}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
                   style={{
                     width: '18px',
                     height: '18px',
@@ -1258,6 +1310,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
                     alignItems: 'center',
                     justifyContent: 'center',
                     padding: 0,
+                    userSelect: 'none',
                   }}
                 >
                   +
@@ -1300,6 +1353,8 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
                       const newLyrics = [...lyrics];
                       // 現在の行の終了時間 + 0.1秒を次の行の開始時間に設定
                       newLyrics[index + 1].startTime = Math.min(duration, newLyrics[index].endTime + 0.1);
+                      // 次の行の終了時間を開始時間 + 3秒に設定
+                      newLyrics[index + 1].endTime = Math.min(duration, newLyrics[index + 1].startTime + 3);
                       onLyricsChange(newLyrics);
                     }}
                     style={{
@@ -1632,8 +1687,32 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
 
           <button
             onClick={() => {
-              // Remotionのレンダー機能を呼び出す
-              alert('レンダーを開始します。Remotion Studioの右上の"Render"ボタンをクリックしてください。');
+              // 歌詞動画の書き出し手順を案内
+              const message = `📹 歌詞動画の書き出し手順：
+
+1. Remotion Studio左上の「Composition」を変更：
+   • 横動画（YouTube）: "LyricsVideoYouTube" を選択
+   • 縦動画（TikTok/Instagram）: "LyricsVideoVertical" を選択
+
+2. Remotion Studio右上の「Render」ボタンをクリック
+
+3. 動画ファイル（MP4）がダウンロードされます
+
+注意: "WaveformEditor"は編集専用です。必ず上記のコンポジションを選択してください。`;
+              
+              alert(message);
+              
+              // 5秒後にコンポジション選択を強調表示
+              setTimeout(() => {
+                const compositionSelector = document.querySelector('[data-testid="composition-selector"]');
+                if (compositionSelector) {
+                  compositionSelector.scrollIntoView({ behavior: 'smooth' });
+                  (compositionSelector as HTMLElement).style.border = '3px solid #10b981';
+                  setTimeout(() => {
+                    (compositionSelector as HTMLElement).style.border = '';
+                  }, 3000);
+                }
+              }, 1000);
             }}
             style={{
               backgroundColor: '#10b981',

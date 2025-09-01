@@ -26,10 +26,31 @@ const initialStyleSettings: StyleSettings = {
   fadeSpeed: 0.5,
 };
 
-// Wrapper component to handle state
-const WaveformTimelineWrapper: React.FC = () => {
+// 共有状態を管理するコンテキスト
+const LyricsContext = React.createContext<{
+  lyrics: LyricsLine[];
+  styleSettings: StyleSettings;
+  setLyrics: (lyrics: LyricsLine[]) => void;
+  setStyleSettings: (settings: StyleSettings) => void;
+} | null>(null);
+
+const LyricsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [lyrics, setLyrics] = useState<LyricsLine[]>(initialLyrics);
   const [styleSettings, setStyleSettings] = useState<StyleSettings>(initialStyleSettings);
+
+  return (
+    <LyricsContext.Provider value={{ lyrics, styleSettings, setLyrics, setStyleSettings }}>
+      {children}
+    </LyricsContext.Provider>
+  );
+};
+
+// 編集画面用のラッパー
+const WaveformTimelineWrapper: React.FC = () => {
+  const context = React.useContext(LyricsContext);
+  if (!context) return null;
+
+  const { lyrics, styleSettings, setLyrics, setStyleSettings } = context;
 
   return (
     <WaveformTimeline
@@ -42,9 +63,30 @@ const WaveformTimelineWrapper: React.FC = () => {
   );
 };
 
+// 書き出し用のラッパー
+const ExportVideoWrapper: React.FC<{ format: 'youtube' | 'vertical' }> = ({ format }) => {
+  const context = React.useContext(LyricsContext);
+  if (!context) return null;
+
+  const { lyrics, styleSettings } = context;
+
+  return (
+    <LyricsEditor
+      format={format}
+      lyricsData={lyrics}
+      fontFamily={styleSettings.fontFamily}
+      fontSize={format === 'youtube' ? Math.max(styleSettings.fontSize, 48) : Math.max(styleSettings.fontSize, 54)}
+      fontColor={styleSettings.fontColor}
+      strokeColor={styleSettings.strokeColor}
+      strokeWidth={styleSettings.strokeWidth}
+      position={styleSettings.position}
+    />
+  );
+};
+
 export const RemotionRoot: React.FC = () => {
   return (
-    <>
+    <LyricsProvider>
       {/* 波形タイムラインエディター（メインエディター） */}
       <Composition
         id="WaveformEditor"
@@ -55,55 +97,25 @@ export const RemotionRoot: React.FC = () => {
         height={800}
       />
 
-      {/* YouTube横動画用 */}
+      {/* YouTube横動画用 - 編集内容を自動反映 */}
       <Composition
         id="LyricsVideoYouTube"
-        component={LyricsEditor}
-        durationInFrames={6000} // 100秒 (60fps)
+        component={() => <ExportVideoWrapper format="youtube" />}
+        durationInFrames={18000} // 編集画面と同じ長さ
         fps={60}
         width={1920}
         height={1080}
-        defaultProps={{
-          format: 'youtube' as const,
-          lyricsData: [
-            { text: "君の笑顔が好きなんだ", startTime: 0, endTime: 3, confidence: 1.0 },
-            { text: "この瞬間を忘れないで", startTime: 3, endTime: 6, confidence: 1.0 },
-            { text: "時が過ぎても変わらずに", startTime: 6, endTime: 9, confidence: 1.0 },
-            { text: "心の中で歌い続ける", startTime: 9, endTime: 12, confidence: 1.0 },
-          ],
-          fontFamily: "'Shippori Mincho', 'しっぽり明朝', serif",
-          fontSize: 48,
-          fontColor: '#000000',
-          strokeColor: '#FFFFFF',
-          strokeWidth: 2,
-          position: 'bottom' as const,
-        }}
       />
 
-      {/* TikTok/Instagram縦動画用 */}
+      {/* TikTok/Instagram縦動画用 - 編集内容を自動反映 */}
       <Composition
         id="LyricsVideoVertical"
-        component={LyricsEditor}
-        durationInFrames={6000}
+        component={() => <ExportVideoWrapper format="vertical" />}
+        durationInFrames={18000} // 編集画面と同じ長さ
         fps={60}
         width={1080}
         height={1920}
-        defaultProps={{
-          format: 'vertical' as const,
-          lyricsData: [
-            { text: "君の笑顔が好きなんだ", startTime: 0, endTime: 3, confidence: 1.0 },
-            { text: "この瞬間を忘れないで", startTime: 3, endTime: 6, confidence: 1.0 },
-            { text: "時が過ぎても変わらずに", startTime: 6, endTime: 9, confidence: 1.0 },
-            { text: "心の中で歌い続ける", startTime: 9, endTime: 12, confidence: 1.0 },
-          ],
-          fontFamily: "'Shippori Mincho', 'しっぽり明朝', serif",
-          fontSize: 54,
-          fontColor: '#000000',
-          strokeColor: '#FFFFFF', 
-          strokeWidth: 2,
-          position: 'center' as const,
-        }}
       />
-    </>
+    </LyricsProvider>
   );
 };
