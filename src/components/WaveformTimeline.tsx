@@ -1111,6 +1111,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
             <strong>📖 操作方法：</strong><br/>
             • ±ボタン：0.1秒刻みで時間調整<br/>
             • 🎯ボタン：その時間にジャンプして確認<br/>
+            • ⏭️ボタン：次の歌詞の開始時間を自動設定<br/>
             • 青色：現在再生中 / 黄色：選択中
           </div>
           
@@ -1290,6 +1291,37 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
                 >
                   🎯
                 </button>
+                
+                {/* 次の歌詞への自動設定ボタン */}
+                {index < lyrics.length - 1 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const newLyrics = [...lyrics];
+                      // 現在の行の終了時間 + 0.1秒を次の行の開始時間に設定
+                      newLyrics[index + 1].startTime = Math.min(duration, newLyrics[index].endTime + 0.1);
+                      onLyricsChange(newLyrics);
+                    }}
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      backgroundColor: '#059669',
+                      color: 'white',
+                      border: '1px solid #065f46',
+                      borderRadius: '2px',
+                      cursor: 'pointer',
+                      fontSize: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: 0,
+                      marginLeft: '2px',
+                    }}
+                    title={`次の歌詞の開始を${(line.endTime + 0.1).toFixed(1)}秒に設定`}
+                  >
+                    ⏭️
+                  </button>
+                )}
               </div>
             ))}
           </div>
