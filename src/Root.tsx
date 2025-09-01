@@ -16,6 +16,7 @@ const initialLyrics: LyricsLine[] = [
 const initialStyleSettings: StyleSettings = {
   fontFamily: "'Shippori Mincho', 'しっぽり明朝', serif",
   fontSize: 24,
+  fontWeight: 'bold',
   fontColor: '#FFFFFF',
   strokeColor: '#000000',
   strokeWidth: 1,

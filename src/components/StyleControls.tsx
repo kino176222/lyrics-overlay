@@ -3,6 +3,7 @@ import React from 'react';
 export interface StyleSettings {
   fontFamily: string;
   fontSize: number;
+  fontWeight: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900';
   fontColor: string;
   strokeColor: string;
   strokeWidth: number;
@@ -10,7 +11,7 @@ export interface StyleSettings {
   yOffset: number;
   animationStyle: 'fade' | 'slide' | 'scale' | 'bounce' | 'typewriter' | 'blur' | 'rotate' | 'wave';
   fadeSpeed: number;
-  glowEffect?: 'none' | 'soft' | 'strong' | 'neon' | 'pulse' | 'rainbow';
+  glowEffect?: 'none' | 'weak' | 'soft' | 'strong' | 'neon' | 'pulse' | 'rainbow';
   glowColor?: string;
   textWrap?: 'nowrap' | 'wrap' | 'auto';
 }

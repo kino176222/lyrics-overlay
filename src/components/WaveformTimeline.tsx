@@ -351,9 +351,34 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
             ✨ スタイルプリセット
           </h4>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            {/* テスト用：太字確認ボタン */}
+            <button
+              onClick={() => {
+                updateStyleSetting('fontSize', 40);
+                updateStyleSetting('fontWeight', '900');
+                updateStyleSetting('fontColor', '#FFFFFF');
+                updateStyleSetting('strokeColor', '#000000');
+                updateStyleSetting('strokeWidth', 0);
+                updateStyleSetting('fontFamily', "system-ui, sans-serif");
+                updateStyleSetting('position', 'center');
+                updateStyleSetting('glowEffect', 'none' as any);
+              }}
+              style={{
+                padding: '8px',
+                backgroundColor: '#059669',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px',
+              }}
+            >
+              🔥 超太字テスト
+            </button>
             <button
               onClick={() => {
                 updateStyleSetting('fontSize', 46);
+                updateStyleSetting('fontWeight', 'bold');
                 updateStyleSetting('fontColor', '#FFFFFF');
                 updateStyleSetting('strokeColor', '#000000');
                 updateStyleSetting('strokeWidth', 3);
@@ -377,6 +402,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
             <button
               onClick={() => {
                 updateStyleSetting('fontSize', 36);
+                updateStyleSetting('fontWeight', '800');
                 updateStyleSetting('fontColor', '#FFFF00');
                 updateStyleSetting('strokeColor', '#000000');
                 updateStyleSetting('strokeWidth', 2);
@@ -399,6 +425,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
             <button
               onClick={() => {
                 updateStyleSetting('fontSize', 42);
+                updateStyleSetting('fontWeight', 'bold');
                 updateStyleSetting('fontColor', '#FFFFFF');
                 updateStyleSetting('strokeColor', '#FF1493');
                 updateStyleSetting('strokeWidth', 2);
@@ -422,6 +449,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
             <button
               onClick={() => {
                 updateStyleSetting('fontSize', 32);
+                updateStyleSetting('fontWeight', 'normal');
                 updateStyleSetting('fontColor', '#FFFFFF');
                 updateStyleSetting('strokeColor', '#000000');
                 updateStyleSetting('strokeWidth', 1);
@@ -646,14 +674,52 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
           <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
             フォントサイズ: {styleSettings.fontSize}px
           </label>
-          <input
-            type="range"
-            min="12"
-            max="200"
-            value={styleSettings.fontSize}
-            onChange={(e) => updateStyleSetting('fontSize', parseInt(e.target.value))}
-            style={{ width: '100%' }}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <button
+              onClick={() => updateStyleSetting('fontSize', Math.max(12, styleSettings.fontSize - 2))}
+              style={{
+                width: '30px',
+                height: '30px',
+                backgroundColor: '#444',
+                color: 'white',
+                border: '1px solid #666',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              −
+            </button>
+            <input
+              type="range"
+              min="12"
+              max="200"
+              value={styleSettings.fontSize}
+              onChange={(e) => updateStyleSetting('fontSize', parseInt(e.target.value))}
+              style={{ flex: 1 }}
+            />
+            <button
+              onClick={() => updateStyleSetting('fontSize', Math.min(200, styleSettings.fontSize + 2))}
+              style={{
+                width: '30px',
+                height: '30px',
+                backgroundColor: '#444',
+                color: 'white',
+                border: '1px solid #666',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              ＋
+            </button>
+          </div>
           <input
             type="number"
             min="12"
@@ -662,7 +728,6 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
             onChange={(e) => updateStyleSetting('fontSize', parseInt(e.target.value))}
             style={{
               width: '60px',
-              marginTop: '5px',
               padding: '3px',
               backgroundColor: '#333',
               color: 'white',
@@ -717,6 +782,35 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
           </select>
         </div>
 
+        {/* フォント太さ */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+            フォント太さ
+          </label>
+          <select
+            value={styleSettings.fontWeight || 'bold'}
+            onChange={(e) => updateStyleSetting('fontWeight', e.target.value as any)}
+            style={{
+              width: '100%',
+              padding: '8px',
+              backgroundColor: '#333',
+              color: 'white',
+              border: '1px solid #555',
+              borderRadius: '4px',
+            }}
+          >
+            <option value="100">100 - 極細</option>
+            <option value="200">200 - 細</option>
+            <option value="300">300 - 薄</option>
+            <option value="normal">400 - 標準</option>
+            <option value="500">500 - 中太</option>
+            <option value="600">600 - 太</option>
+            <option value="bold">700 - 太字</option>
+            <option value="800">800 - 極太</option>
+            <option value="900">900 - 超極太</option>
+          </select>
+        </div>
+
         {/* 文字色 */}
         <div style={{ marginBottom: '20px' }}>
           <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
@@ -745,16 +839,55 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
 
         <div style={{ marginBottom: '20px' }}>
           <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
-            縁取り太さ: {styleSettings.strokeWidth}px
+            縁取り太さ: {styleSettings.strokeWidth.toFixed(1)}px
           </label>
-          <input
-            type="range"
-            min="0"
-            max="10"
-            value={styleSettings.strokeWidth}
-            onChange={(e) => updateStyleSetting('strokeWidth', parseInt(e.target.value))}
-            style={{ width: '100%' }}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              onClick={() => updateStyleSetting('strokeWidth', Math.max(0, styleSettings.strokeWidth - 0.1))}
+              style={{
+                width: '30px',
+                height: '30px',
+                backgroundColor: '#444',
+                color: 'white',
+                border: '1px solid #666',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              −
+            </button>
+            <input
+              type="range"
+              min="0"
+              max="10"
+              step="0.1"
+              value={styleSettings.strokeWidth}
+              onChange={(e) => updateStyleSetting('strokeWidth', parseFloat(e.target.value))}
+              style={{ flex: 1 }}
+            />
+            <button
+              onClick={() => updateStyleSetting('strokeWidth', Math.min(10, styleSettings.strokeWidth + 0.1))}
+              style={{
+                width: '30px',
+                height: '30px',
+                backgroundColor: '#444',
+                color: 'white',
+                border: '1px solid #666',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              ＋
+            </button>
+          </div>
         </div>
 
         {/* 位置 */}
@@ -930,6 +1063,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
             }}
           >
             <option value="none">なし</option>
+            <option value="weak">弱い発光</option>
             <option value="soft">ソフト発光</option>
             <option value="strong">強い発光</option>
             <option value="neon">ネオン</option>
@@ -960,9 +1094,26 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
           borderRadius: '8px',
           marginTop: '20px',
         }}>
-          <h4 style={{ margin: '0 0 15px 0', color: '#4f46e5' }}>
+          <h4 style={{ margin: '0 0 10px 0', color: '#4f46e5' }}>
             ⏰ 歌詞タイミング調整
           </h4>
+          
+          {/* 操作説明 */}
+          <div style={{
+            backgroundColor: 'rgba(79, 70, 229, 0.1)',
+            padding: '8px',
+            borderRadius: '4px',
+            marginBottom: '15px',
+            fontSize: '11px',
+            color: '#a5b4fc',
+            lineHeight: '1.4'
+          }}>
+            <strong>📖 操作方法：</strong><br/>
+            • ±ボタン：0.1秒刻みで時間調整<br/>
+            • 🎯ボタン：その時間にジャンプして確認<br/>
+            • 青色：現在再生中 / 黄色：選択中
+          </div>
+          
           <div style={{
             maxHeight: '200px',
             overflowY: 'auto',
@@ -973,63 +1124,172 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '5px',
-                  padding: '5px',
+                  gap: '4px',
+                  padding: '6px',
                   backgroundColor: index === selectedLyricIndex ? 'rgba(234, 179, 8, 0.2)' : 
                                   index === currentLyricIndex ? 'rgba(79, 70, 229, 0.2)' : 'transparent',
-                  borderRadius: '3px',
-                  marginBottom: '3px',
+                  borderRadius: '4px',
+                  marginBottom: '4px',
                   cursor: 'pointer',
+                  border: index === currentLyricIndex ? '1px solid rgba(79, 70, 229, 0.5)' : '1px solid transparent',
                 }}
                 onClick={() => setSelectedLyricIndex(index)}
               >
-                <span style={{ width: '25px', fontSize: '11px', color: '#999' }}>
-                  {index + 1}.
+                <span style={{ width: '20px', fontSize: '10px', color: '#999', textAlign: 'center' }}>
+                  {index + 1}
                 </span>
-                <span style={{ flex: 1, fontSize: '11px', color: '#ccc', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ flex: 1, fontSize: '11px', color: '#ccc', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: '60px' }}>
                   {line.text}
                 </span>
-                <input
-                  type="number"
-                  value={line.startTime.toFixed(1)}
-                  onChange={(e) => {
+                
+                {/* 開始時間調整 */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
                     const newLyrics = [...lyrics];
-                    newLyrics[index].startTime = parseFloat(e.target.value) || 0;
+                    newLyrics[index].startTime = Math.max(0, newLyrics[index].startTime - 0.1);
                     onLyricsChange(newLyrics);
                   }}
-                  onClick={(e) => e.stopPropagation()}
                   style={{
-                    width: '45px',
-                    padding: '2px',
-                    fontSize: '10px',
-                    backgroundColor: '#333',
-                    color: 'white',
-                    border: '1px solid #555',
+                    width: '18px',
+                    height: '18px',
+                    backgroundColor: '#374151',
+                    color: '#9ca3af',
+                    border: '1px solid #4b5563',
                     borderRadius: '2px',
+                    cursor: 'pointer',
+                    fontSize: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 0,
                   }}
-                  step="0.1"
-                />
-                <span style={{ fontSize: '10px', color: '#666' }}>-</span>
-                <input
-                  type="number"
-                  value={line.endTime.toFixed(1)}
-                  onChange={(e) => {
+                >
+                  −
+                </button>
+                <span style={{ 
+                  fontSize: '10px', 
+                  color: index === currentLyricIndex ? '#60a5fa' : '#9ca3af',
+                  fontWeight: index === currentLyricIndex ? 'bold' : 'normal',
+                  minWidth: '28px',
+                  textAlign: 'center'
+                }}>
+                  {line.startTime.toFixed(1)}
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
                     const newLyrics = [...lyrics];
-                    newLyrics[index].endTime = parseFloat(e.target.value) || 0;
+                    newLyrics[index].startTime = Math.min(duration, newLyrics[index].startTime + 0.1);
                     onLyricsChange(newLyrics);
                   }}
-                  onClick={(e) => e.stopPropagation()}
                   style={{
-                    width: '45px',
-                    padding: '2px',
-                    fontSize: '10px',
-                    backgroundColor: '#333',
-                    color: 'white',
-                    border: '1px solid #555',
+                    width: '18px',
+                    height: '18px',
+                    backgroundColor: '#374151',
+                    color: '#9ca3af',
+                    border: '1px solid #4b5563',
                     borderRadius: '2px',
+                    cursor: 'pointer',
+                    fontSize: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 0,
                   }}
-                  step="0.1"
-                />
+                >
+                  +
+                </button>
+                
+                <span style={{ fontSize: '8px', color: '#6b7280', margin: '0 2px' }}>-</span>
+                
+                {/* 終了時間調整 */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const newLyrics = [...lyrics];
+                    newLyrics[index].endTime = Math.max(newLyrics[index].startTime + 0.1, newLyrics[index].endTime - 0.1);
+                    onLyricsChange(newLyrics);
+                  }}
+                  style={{
+                    width: '18px',
+                    height: '18px',
+                    backgroundColor: '#374151',
+                    color: '#9ca3af',
+                    border: '1px solid #4b5563',
+                    borderRadius: '2px',
+                    cursor: 'pointer',
+                    fontSize: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 0,
+                  }}
+                >
+                  −
+                </button>
+                <span style={{ 
+                  fontSize: '10px', 
+                  color: index === currentLyricIndex ? '#60a5fa' : '#9ca3af',
+                  fontWeight: index === currentLyricIndex ? 'bold' : 'normal',
+                  minWidth: '28px',
+                  textAlign: 'center'
+                }}>
+                  {line.endTime.toFixed(1)}
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const newLyrics = [...lyrics];
+                    newLyrics[index].endTime = Math.min(duration, newLyrics[index].endTime + 0.1);
+                    onLyricsChange(newLyrics);
+                  }}
+                  style={{
+                    width: '18px',
+                    height: '18px',
+                    backgroundColor: '#374151',
+                    color: '#9ca3af',
+                    border: '1px solid #4b5563',
+                    borderRadius: '2px',
+                    cursor: 'pointer',
+                    fontSize: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 0,
+                  }}
+                >
+                  +
+                </button>
+                
+                {/* ジャンプボタン */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (audioRef.current) {
+                      audioRef.current.currentTime = line.startTime;
+                      setCurrentTime(line.startTime);
+                    }
+                  }}
+                  style={{
+                    width: '20px',
+                    height: '18px',
+                    backgroundColor: '#059669',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '2px',
+                    cursor: 'pointer',
+                    fontSize: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 0,
+                    marginLeft: '2px',
+                  }}
+                  title={`${line.startTime.toFixed(1)}秒にジャンプ`}
+                >
+                  🎯
+                </button>
               </div>
             ))}
           </div>
@@ -1084,10 +1344,14 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
               style={{
                 fontSize: `${styleSettings.fontSize}px`,
                 fontFamily: styleSettings.fontFamily,
+                fontWeight: styleSettings.fontWeight || 'bold',
                 color: styleSettings.fontColor,
                 textAlign: 'center',
-                WebkitTextStroke: `${styleSettings.strokeWidth}px ${styleSettings.strokeColor}`,
-                fontWeight: 'bold',
+                // strokeWidthが0の時はWebkitTextStrokeを適用しない（太字効果を維持）
+                ...(styleSettings.strokeWidth > 0 ? {
+                  WebkitTextStroke: `${styleSettings.strokeWidth}px ${styleSettings.strokeColor}`,
+                  WebkitTextFillColor: styleSettings.fontColor,
+                } : {}),
                 lineHeight: 1.2,
                 maxWidth: styleSettings.textWrap === 'nowrap' ? 'none' : '90%',
                 whiteSpace: styleSettings.textWrap === 'wrap' ? 'normal' : 
@@ -1153,7 +1417,11 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
                   };
                 })(),
                 // 発光エフェクト＋アニメ風影
-                ...(styleSettings.glowEffect === 'soft' ? {
+                ...(styleSettings.glowEffect === 'weak' ? {
+                  textShadow: `
+                    1px 1px 0px rgba(0,0,0,0.7),
+                    0 0 5px ${styleSettings.glowColor || '#ffffff'}`
+                } : styleSettings.glowEffect === 'soft' ? {
                   textShadow: `
                     2px 2px 0px rgba(0,0,0,0.8),
                     4px 4px 8px rgba(0,0,0,0.5),
@@ -1177,7 +1445,13 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
                 } : styleSettings.glowEffect === 'rainbow' ? {
                   animation: 'rainbow 3s linear infinite'
                 } : {
-                  textShadow: '2px 2px 4px rgba(0,0,0,0.8), 4px 4px 8px rgba(0,0,0,0.5)'
+                  // 発光エフェクトがない場合：基本影 + フォント太さ強調
+                  textShadow: `2px 2px 4px rgba(0,0,0,0.8), 4px 4px 8px rgba(0,0,0,0.5)${
+                    (styleSettings.fontWeight === 'bold' || parseInt(styleSettings.fontWeight || '400') >= 700) &&
+                    styleSettings.strokeWidth <= 0.5
+                      ? ', 1px 0 0 currentColor, 0 1px 0 currentColor, -1px 0 0 currentColor, 0 -1px 0 currentColor' 
+                      : ''
+                  }`
                 })
               }}
             >
