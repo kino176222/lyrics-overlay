@@ -1,0 +1,1380 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { LyricsLine } from './LyricsEditor';
+import { StyleSettings } from './StyleControls';
+import { TextInputUploader } from './TextInputUploader';
+
+interface WaveformTimelineProps {
+  lyrics: LyricsLine[];
+  audioFile?: string;
+  styleSettings: StyleSettings;
+  onLyricsChange: (lyrics: LyricsLine[]) => void;
+  onStyleChange: (settings: StyleSettings) => void;
+}
+
+export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
+  lyrics,
+  audioFile,
+  styleSettings,
+  onLyricsChange,
+  onStyleChange,
+}) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [selectedLyricIndex, setSelectedLyricIndex] = useState<number | null>(null);
+  const [showTextInput, setShowTextInput] = useState(!lyrics.length);
+  const [currentAudioFile, setCurrentAudioFile] = useState(audioFile);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 現在再生中の歌詞
+  const currentLyricIndex = lyrics.findIndex(
+    line => currentTime >= line.startTime && currentTime <= line.endTime
+  );
+
+  // 音声制御
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  // タイムライン上でクリックして時間移動
+  const handleTimelineClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current || !duration || isDragging) return;
+    
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const clickTime = (x / rect.width) * duration;
+    
+    // 歌詞ブロックのクリック判定
+    let clickedLyric = false;
+    lyrics.forEach((line, index) => {
+      const startX = (line.startTime / duration) * rect.width;
+      const endX = (line.endTime / duration) * rect.width;
+      
+      if (y >= 10 && y <= rect.height - 10) {
+        // 開始ハンドル
+        if (x >= startX && x <= startX + 10) {
+          handleLyricMouseDown(e, index, 'start');
+          setSelectedLyricIndex(index);
+          clickedLyric = true;
+          return;
+        }
+        // 終了ハンドル
+        if (x >= endX - 10 && x <= endX) {
+          handleLyricMouseDown(e, index, 'end');
+          setSelectedLyricIndex(index);
+          clickedLyric = true;
+          return;
+        }
+        // ブロック本体
+        if (x >= startX && x <= endX) {
+          handleLyricMouseDown(e, index, 'move');
+          setSelectedLyricIndex(index);
+          clickedLyric = true;
+          return;
+        }
+      }
+    });
+    
+    // 歌詞ブロック外をクリックした場合のみ時間移動
+    if (!clickedLyric && audioRef.current) {
+      audioRef.current.currentTime = clickTime;
+      setCurrentTime(clickTime);
+    }
+  };
+
+  // 歌詞ブロックのドラッグ調整
+  const [isDragging, setIsDragging] = useState<{index: number, type: 'start' | 'end' | 'move'} | null>(null);
+  const [dragStartX, setDragStartX] = useState(0);
+  const [dragStartTime, setDragStartTime] = useState({start: 0, end: 0});
+
+  const handleLyricMouseDown = (e: React.MouseEvent, index: number, type: 'start' | 'end' | 'move') => {
+    e.preventDefault();
+    setIsDragging({index, type});
+    setDragStartX(e.clientX);
+    setDragStartTime({
+      start: lyrics[index].startTime,
+      end: lyrics[index].endTime
+    });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !canvasRef.current) return;
+    
+    const deltaX = e.clientX - dragStartX;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const deltaTime = (deltaX / rect.width) * duration;
+    
+    const newLyrics = [...lyrics];
+    const index = isDragging.index;
+    
+    if (isDragging.type === 'start') {
+      newLyrics[index].startTime = Math.max(0, Math.min(dragStartTime.start + deltaTime, newLyrics[index].endTime - 0.5));
+    } else if (isDragging.type === 'end') {
+      newLyrics[index].endTime = Math.min(duration, Math.max(dragStartTime.end + deltaTime, newLyrics[index].startTime + 0.5));
+    } else {
+      const duration = dragStartTime.end - dragStartTime.start;
+      newLyrics[index].startTime = Math.max(0, dragStartTime.start + deltaTime);
+      newLyrics[index].endTime = Math.min(duration, dragStartTime.end + deltaTime);
+    }
+    
+    onLyricsChange(newLyrics);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(null);
+  };
+
+  // テキスト処理
+  const handleTextSubmit = (lyricsText: string) => {
+    try {
+      const lines = lyricsText.split('\n').filter(line => line.trim().length > 0);
+      const timedLyrics: LyricsLine[] = lines.map((line, index) => ({
+        text: line.trim(),
+        startTime: index * 3,
+        endTime: (index + 1) * 3 - 0.5,
+        confidence: 0.5
+      }));
+      
+      onLyricsChange(timedLyrics);
+      setShowTextInput(false);
+    } catch (error) {
+      console.error('歌詞処理エラー:', error);
+      alert(`エラー: ${error.message}`);
+    }
+  };
+
+  // 音声ファイル処理
+  const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setCurrentAudioFile(url);
+      console.log('音声ファイルがアップロードされました:', file.name);
+    }
+  };
+
+  // スタイル即座反映
+  const updateStyleSetting = <K extends keyof StyleSettings>(
+    key: K,
+    value: StyleSettings[K]
+  ) => {
+    const newSettings = { ...styleSettings, [key]: value };
+    onStyleChange(newSettings);
+    console.log(`Updated ${key}:`, value);
+  };
+
+  // 波形描画（簡易版）
+  const drawWaveform = () => {
+    if (!canvasRef.current) return;
+    
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // キャンバスをクリア
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // 背景
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // 簡易波形（ダミーデータ）
+    ctx.strokeStyle = '#4a5568';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    const centerY = canvas.height / 2;
+    
+    for (let x = 0; x < canvas.width; x++) {
+      const amplitude = Math.sin(x * 0.05) * Math.random() * 30;
+      const y = centerY + amplitude;
+      if (x === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // 現在の再生位置
+    if (duration > 0) {
+      const playheadX = (currentTime / duration) * canvas.width;
+      ctx.strokeStyle = '#ff0000';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(playheadX, 0);
+      ctx.lineTo(playheadX, canvas.height);
+      ctx.stroke();
+    }
+
+    // 歌詞ブロック
+    lyrics.forEach((line, index) => {
+      const startX = (line.startTime / duration) * canvas.width;
+      const endX = (line.endTime / duration) * canvas.width;
+      const width = endX - startX;
+      
+      // ブロック背景
+      ctx.fillStyle = index === currentLyricIndex ? 
+        'rgba(79, 70, 229, 0.6)' : 
+        index === selectedLyricIndex ?
+        'rgba(234, 179, 8, 0.6)' :
+        'rgba(34, 197, 94, 0.4)';
+      ctx.fillRect(startX, 10, width, canvas.height - 20);
+      
+      // ブロック境界
+      ctx.strokeStyle = index === selectedLyricIndex ? '#eab308' : '#22c55e';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(startX, 10, width, canvas.height - 20);
+      
+      // ドラッグハンドル（開始）
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.fillRect(startX, 10, 5, canvas.height - 20);
+      
+      // ドラッグハンドル（終了）
+      ctx.fillRect(endX - 5, 10, 5, canvas.height - 20);
+      
+      // 歌詞テキスト
+      ctx.fillStyle = 'white';
+      ctx.font = '12px system-ui';
+      const text = line.text.substring(0, Math.floor(width / 8));
+      ctx.fillText(text, startX + 10, 25);
+    });
+  };
+
+  useEffect(() => {
+    drawWaveform();
+  }, [currentTime, duration, lyrics, selectedLyricIndex]);
+
+
+  const containerStyle: React.CSSProperties = {
+    display: 'flex',
+    height: '100vh',
+    backgroundColor: '#0f0f0f',
+    color: 'white',
+    fontFamily: 'system-ui',
+    position: 'relative',
+  };
+
+  const leftPanelStyle: React.CSSProperties = {
+    width: '300px',
+    borderRight: '1px solid #333',
+    padding: '20px',
+    paddingBottom: '150px',
+    height: '100vh',
+    boxSizing: 'border-box',
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    WebkitOverflowScrolling: 'touch',
+    scrollbarWidth: 'thin',
+    scrollbarColor: '#4f46e5 #1a1a2e',
+  };
+
+  const mainAreaStyle: React.CSSProperties = {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100vh',
+    paddingBottom: '120px',
+    boxSizing: 'border-box',
+  };
+
+  const previewStyle: React.CSSProperties = {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#000',
+    position: 'relative',
+  };
+
+  const timelineStyle: React.CSSProperties = {
+    height: '200px',
+    borderTop: '1px solid #333',
+    padding: '20px',
+  };
+
+  const controlsStyle: React.CSSProperties = {
+    position: 'fixed',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '100px',
+    borderTop: '2px solid #333',
+    padding: '20px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '15px',
+    backgroundColor: '#1a1a1a',
+    zIndex: 1000,
+    boxShadow: '0 -4px 10px rgba(0,0,0,0.5)',
+  };
+
+  return (
+    <div style={containerStyle}>
+      {/* 音声要素 */}
+      {currentAudioFile && (
+        <audio
+          ref={audioRef}
+          src={currentAudioFile}
+          onTimeUpdate={() => {
+            if (audioRef.current) {
+              setCurrentTime(audioRef.current.currentTime);
+            }
+          }}
+          onLoadedMetadata={() => {
+            if (audioRef.current) {
+              setDuration(audioRef.current.duration);
+            }
+          }}
+          onEnded={() => setIsPlaying(false)}
+        />
+      )}
+
+      {/* 左パネル：リアルタイムスタイル調整 */}
+      <div style={leftPanelStyle}>
+        <h3 style={{ margin: '0 0 20px 0' }}>🎨 リアルタイム調整</h3>
+
+        {/* スタイルプリセット */}
+        <div style={{
+          backgroundColor: '#1a1a2e',
+          padding: '15px',
+          borderRadius: '8px',
+          marginBottom: '20px',
+        }}>
+          <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#4f46e5' }}>
+            ✨ スタイルプリセット
+          </h4>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <button
+              onClick={() => {
+                updateStyleSetting('fontSize', 46);
+                updateStyleSetting('fontColor', '#FFFFFF');
+                updateStyleSetting('strokeColor', '#000000');
+                updateStyleSetting('strokeWidth', 3);
+                updateStyleSetting('fontFamily', "'A-OTF Ryumin Pr6N M', 'リュウミン M-KL', 'Hiragino Mincho ProN', 'ヒラギノ明朝 ProN W3', 'Yu Mincho', '游明朝', 'Shippori Mincho', 'しっぽり明朝', serif");
+                updateStyleSetting('position', 'bottom');
+                updateStyleSetting('glowEffect', 'none' as any);
+                updateStyleSetting('textWrap', 'nowrap' as any);
+              }}
+              style={{
+                padding: '8px',
+                backgroundColor: '#4f46e5',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px',
+              }}
+            >
+              🎌 アニメ明朝
+            </button>
+            <button
+              onClick={() => {
+                updateStyleSetting('fontSize', 36);
+                updateStyleSetting('fontColor', '#FFFF00');
+                updateStyleSetting('strokeColor', '#000000');
+                updateStyleSetting('strokeWidth', 2);
+                updateStyleSetting('fontFamily', "'M PLUS Rounded 1c', sans-serif");
+                updateStyleSetting('position', 'bottom');
+                updateStyleSetting('glowEffect', 'none' as any);
+              }}
+              style={{
+                padding: '8px',
+                backgroundColor: '#eab308',
+                color: 'black',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px',
+              }}
+            >
+              📺 バラエティ
+            </button>
+            <button
+              onClick={() => {
+                updateStyleSetting('fontSize', 42);
+                updateStyleSetting('fontColor', '#FFFFFF');
+                updateStyleSetting('strokeColor', '#FF1493');
+                updateStyleSetting('strokeWidth', 2);
+                updateStyleSetting('fontFamily', "'Kiwi Maru', serif");
+                updateStyleSetting('position', 'center');
+                updateStyleSetting('glowEffect', 'neon' as any);
+                updateStyleSetting('glowColor', '#FF69B4');
+              }}
+              style={{
+                padding: '8px',
+                backgroundColor: '#ec4899',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px',
+              }}
+            >
+              🎤 カラオケ
+            </button>
+            <button
+              onClick={() => {
+                updateStyleSetting('fontSize', 32);
+                updateStyleSetting('fontColor', '#FFFFFF');
+                updateStyleSetting('strokeColor', '#000000');
+                updateStyleSetting('strokeWidth', 1);
+                updateStyleSetting('fontFamily', "'Shippori Mincho', 'しっぽり明朝', serif");
+                updateStyleSetting('position', 'bottom');
+                updateStyleSetting('glowEffect', 'none' as any);
+              }}
+              style={{
+                padding: '8px',
+                backgroundColor: '#6b7280',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px',
+              }}
+            >
+              📖 字幕
+            </button>
+          </div>
+        </div>
+
+        {/* 初期設定 */}
+        {(!lyrics.length || showTextInput) && (
+          <div style={{
+            backgroundColor: '#1a1a2e',
+            padding: '15px',
+            borderRadius: '8px',
+            marginBottom: '20px',
+            border: '1px solid #4f46e5',
+          }}>
+            <h4 style={{ margin: '0 0 15px 0', color: '#4f46e5' }}>
+              📝 歌詞を入力
+            </h4>
+            <TextInputUploader onTextSubmit={handleTextSubmit} />
+          </div>
+        )}
+
+        {/* 音声ファイルアップロード */}
+        <div style={{
+          backgroundColor: '#1a1a2e',
+          padding: '15px',
+          borderRadius: '8px',
+          marginBottom: '20px',
+        }}>
+          <h4 style={{ margin: '0 0 10px 0' }}>🎵 音声ファイル</h4>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="audio/*"
+            onChange={handleAudioUpload}
+            style={{ display: 'none' }}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              width: '100%',
+              padding: '10px',
+              backgroundColor: currentAudioFile ? '#059669' : '#4f46e5',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            {currentAudioFile ? '✅ 音声ファイル選択済み' : '📁 MP3ファイルを選択'}
+          </button>
+          
+          {lyrics.length > 0 && (
+            <button
+              onClick={() => setShowTextInput(true)}
+              style={{
+                width: '100%',
+                padding: '8px',
+                backgroundColor: '#6b7280',
+                color: 'white',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                marginTop: '8px',
+              }}
+            >
+              📝 歌詞を再編集
+            </button>
+          )}
+        </div>
+        
+        {/* 選択中の歌詞 */}
+        {selectedLyricIndex !== null && lyrics[selectedLyricIndex] && (
+          <div style={{
+            backgroundColor: '#1a1a2e',
+            padding: '15px',
+            borderRadius: '8px',
+            marginBottom: '20px',
+            border: '1px solid #eab308',
+          }}>
+            <h4 style={{ margin: '0 0 10px 0', color: '#eab308' }}>
+              選択中: 行{selectedLyricIndex + 1}
+            </h4>
+            <div style={{ marginBottom: '10px' }}>
+              <label style={{ display: 'block', fontSize: '12px', color: '#ccc', marginBottom: '5px' }}>歌詞テキスト:</label>
+              <input
+                type="text"
+                value={lyrics[selectedLyricIndex]?.text || ''}
+                onChange={(e) => {
+                  const newLyrics = [...lyrics];
+                  if (newLyrics[selectedLyricIndex]) {
+                    newLyrics[selectedLyricIndex].text = e.target.value;
+                    onLyricsChange(newLyrics);
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  backgroundColor: '#333',
+                  color: 'white',
+                  border: '1px solid #555',
+                  borderRadius: '4px',
+                  fontSize: '13px',
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#ccc', marginBottom: '3px' }}>開始時間(秒):</label>
+                <input
+                  type="number"
+                  value={lyrics[selectedLyricIndex]?.startTime.toFixed(1) || '0.0'}
+                  onChange={(e) => {
+                    const newLyrics = [...lyrics];
+                    if (newLyrics[selectedLyricIndex]) {
+                      newLyrics[selectedLyricIndex].startTime = Math.max(0, parseFloat(e.target.value) || 0);
+                      onLyricsChange(newLyrics);
+                    }
+                  }}
+                  step="0.1"
+                  min="0"
+                  style={{
+                    width: '100%',
+                    padding: '6px',
+                    backgroundColor: '#333',
+                    color: 'white',
+                    border: '1px solid #555',
+                    borderRadius: '3px',
+                    fontSize: '12px',
+                  }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#ccc', marginBottom: '3px' }}>終了時間(秒):</label>
+                <input
+                  type="number"
+                  value={lyrics[selectedLyricIndex]?.endTime.toFixed(1) || '0.0'}
+                  onChange={(e) => {
+                    const newLyrics = [...lyrics];
+                    if (newLyrics[selectedLyricIndex]) {
+                      newLyrics[selectedLyricIndex].endTime = Math.max(newLyrics[selectedLyricIndex].startTime + 0.1, parseFloat(e.target.value) || 0);
+                      onLyricsChange(newLyrics);
+                    }
+                  }}
+                  step="0.1"
+                  min="0.1"
+                  style={{
+                    width: '100%',
+                    padding: '6px',
+                    backgroundColor: '#333',
+                    color: 'white',
+                    border: '1px solid #555',
+                    borderRadius: '3px',
+                    fontSize: '12px',
+                  }}
+                />
+              </div>
+            </div>
+            <div style={{ marginTop: '8px', display: 'flex', gap: '5px' }}>
+              <button
+                onClick={() => {
+                  if (audioRef.current && lyrics[selectedLyricIndex]) {
+                    audioRef.current.currentTime = lyrics[selectedLyricIndex].startTime;
+                    setCurrentTime(lyrics[selectedLyricIndex].startTime);
+                  }
+                }}
+                style={{
+                  padding: '4px 8px',
+                  backgroundColor: '#059669',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '3px',
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                }}
+              >
+                ▶️ 開始位置へ
+              </button>
+              <button
+                onClick={() => {
+                  if (audioRef.current && lyrics[selectedLyricIndex]) {
+                    audioRef.current.currentTime = lyrics[selectedLyricIndex].endTime;
+                    setCurrentTime(lyrics[selectedLyricIndex].endTime);
+                  }
+                }}
+                style={{
+                  padding: '4px 8px',
+                  backgroundColor: '#dc2626',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '3px',
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                }}
+              >
+                ⏹️ 終了位置へ
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* フォントサイズ */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+            フォントサイズ: {styleSettings.fontSize}px
+          </label>
+          <input
+            type="range"
+            min="12"
+            max="200"
+            value={styleSettings.fontSize}
+            onChange={(e) => updateStyleSetting('fontSize', parseInt(e.target.value))}
+            style={{ width: '100%' }}
+          />
+          <input
+            type="number"
+            min="12"
+            max="200"
+            value={styleSettings.fontSize}
+            onChange={(e) => updateStyleSetting('fontSize', parseInt(e.target.value))}
+            style={{
+              width: '60px',
+              marginTop: '5px',
+              padding: '3px',
+              backgroundColor: '#333',
+              color: 'white',
+              border: '1px solid #555',
+              borderRadius: '3px',
+            }}
+          />
+        </div>
+
+        {/* フォントファミリー */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+            フォント
+          </label>
+          <select
+            value={styleSettings.fontFamily}
+            onChange={(e) => updateStyleSetting('fontFamily', e.target.value)}
+            style={{
+              width: '100%',
+              padding: '8px',
+              backgroundColor: '#333',
+              color: 'white',
+              border: '1px solid #555',
+              borderRadius: '4px',
+            }}
+          >
+            <option value="'Shippori Mincho', 'しっぽり明朝', serif">しっぽり明朝</option>
+            <option value="'Noto Sans JP', sans-serif">Noto Sans JP</option>
+            <option value="'M PLUS Rounded 1c', sans-serif">M PLUS Rounded</option>
+            <option value="'Sawarabi Gothic', sans-serif">さわらびゴシック</option>
+            <option value="'Kosugi Maru', sans-serif">小杉丸ゴシック</option>
+            <option value="'Zen Maru Gothic', sans-serif">Zen丸ゴシック</option>
+            <option value="'Kiwi Maru', serif">キウイ丸</option>
+            <option value="'Hachi Maru Pop', cursive">はち丸ポップ</option>
+            <option value="'Dela Gothic One', cursive">Dela Gothic One</option>
+            <option value="'RocknRoll One', sans-serif">RocknRoll One</option>
+            <option value="'Reggae One', cursive">レゲエ</option>
+            <option value="'Stick', sans-serif">スティック</option>
+            <option value="'DotGothic16', sans-serif">ドットゴシック</option>
+            <option value="'Yuji Syuku', serif">佑字肅</option>
+            <option value="'Kaisei Decol', serif">解星デコール</option>
+            <option value="'A-OTF Ryumin Pr6N M', 'リュウミン M-KL', 'Ryumin Medium', serif">リュウミン M</option>
+            <option value="'A-OTF Ryumin Pr6N H', 'リュウミン H-KL', 'Ryumin Heavy', serif">リュウミン H</option>
+            <option value="'A-OTF Gothic BBB Pr6N M', 'ゴシックBBB Medium', sans-serif">ゴシックBBB M</option>
+            <option value="'A-OTF Shin Go Pr6N M', '新ゴ M', sans-serif">新ゴ M</option>
+            <option value="'A-OTF Shin Go Pr6N B', '新ゴ B', sans-serif">新ゴ B</option>
+            <option value="'Hiragino Kaku Gothic ProN', 'ヒラギノ角ゴ ProN W3', sans-serif">ヒラギノ角ゴ ProN</option>
+            <option value="'Hiragino Mincho ProN', 'ヒラギノ明朝 ProN W3', serif">ヒラギノ明朝 ProN</option>
+            <option value="'Yu Gothic', '游ゴシック', sans-serif">游ゴシック</option>
+            <option value="'Yu Mincho', '游明朝', serif">游明朝</option>
+            <option value="system-ui, sans-serif">システムフォント</option>
+          </select>
+        </div>
+
+        {/* 文字色 */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+            文字色
+          </label>
+          <input
+            type="color"
+            value={styleSettings.fontColor}
+            onChange={(e) => updateStyleSetting('fontColor', e.target.value)}
+            style={{ width: '100%', height: '40px', cursor: 'pointer' }}
+          />
+        </div>
+
+        {/* ストローク（縁取り）設定 */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+            縁取り色
+          </label>
+          <input
+            type="color"
+            value={styleSettings.strokeColor}
+            onChange={(e) => updateStyleSetting('strokeColor', e.target.value)}
+            style={{ width: '100%', height: '40px', cursor: 'pointer' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+            縁取り太さ: {styleSettings.strokeWidth}px
+          </label>
+          <input
+            type="range"
+            min="0"
+            max="10"
+            value={styleSettings.strokeWidth}
+            onChange={(e) => updateStyleSetting('strokeWidth', parseInt(e.target.value))}
+            style={{ width: '100%' }}
+          />
+        </div>
+
+        {/* 位置 */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+            位置
+          </label>
+          <select
+            value={styleSettings.position}
+            onChange={(e) => updateStyleSetting('position', e.target.value as any)}
+            style={{
+              width: '100%',
+              padding: '8px',
+              backgroundColor: '#333',
+              color: 'white',
+              border: '1px solid #555',
+              borderRadius: '4px',
+            }}
+          >
+            <option value="bottom">下部</option>
+            <option value="center">中央</option>
+            <option value="top">上部</option>
+          </select>
+        </div>
+
+        {/* Y軸オフセット */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+            上下位置微調整: {styleSettings.yOffset || 0}px
+          </label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              onClick={() => updateStyleSetting('yOffset', (styleSettings.yOffset || 0) - 10)}
+              style={{
+                padding: '5px 10px',
+                backgroundColor: '#4f46e5',
+                color: 'white',
+                border: 'none',
+                borderRadius: '3px',
+                cursor: 'pointer',
+                fontSize: '12px',
+              }}
+            >
+              ↑上へ
+            </button>
+            <input
+              type="range"
+              min="-200"
+              max="200"
+              value={styleSettings.yOffset || 0}
+              onChange={(e) => updateStyleSetting('yOffset', parseInt(e.target.value))}
+              style={{ flex: 1 }}
+            />
+            <button
+              onClick={() => updateStyleSetting('yOffset', (styleSettings.yOffset || 0) + 10)}
+              style={{
+                padding: '5px 10px',
+                backgroundColor: '#4f46e5',
+                color: 'white',
+                border: 'none',
+                borderRadius: '3px',
+                cursor: 'pointer',
+                fontSize: '12px',
+              }}
+            >
+              ↓下へ
+            </button>
+          </div>
+          <div style={{ textAlign: 'center', marginTop: '5px' }}>
+            <button
+              onClick={() => updateStyleSetting('yOffset', 0)}
+              style={{
+                padding: '3px 8px',
+                backgroundColor: '#666',
+                color: 'white',
+                border: 'none',
+                borderRadius: '3px',
+                cursor: 'pointer',
+                fontSize: '11px',
+              }}
+            >
+              リセット
+            </button>
+          </div>
+        </div>
+
+        {/* アニメーション */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+            出現アニメーション
+          </label>
+          <select
+            value={styleSettings.animationStyle}
+            onChange={(e) => updateStyleSetting('animationStyle', e.target.value as any)}
+            style={{
+              width: '100%',
+              padding: '8px',
+              backgroundColor: '#333',
+              color: 'white',
+              border: '1px solid #555',
+              borderRadius: '4px',
+            }}
+          >
+            <option value="fade">フェードイン</option>
+            <option value="slide">スライドイン</option>
+            <option value="scale">ズームイン</option>
+            <option value="bounce">バウンス</option>
+            <option value="typewriter">タイプライター</option>
+            <option value="blur">ブラーイン</option>
+            <option value="rotate">回転</option>
+            <option value="wave">ウェーブ</option>
+          </select>
+        </div>
+
+        {/* アニメーション速度 */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+            アニメーション速度: {styleSettings.fadeSpeed || 0.5}秒
+          </label>
+          <input
+            type="range"
+            min="0.1"
+            max="2.0"
+            step="0.1"
+            value={styleSettings.fadeSpeed || 0.5}
+            onChange={(e) => updateStyleSetting('fadeSpeed', parseFloat(e.target.value))}
+            style={{ width: '100%' }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#999', marginTop: '3px' }}>
+            <span>高速</span>
+            <span>低速</span>
+          </div>
+        </div>
+
+        {/* テキスト改行設定 */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+            長いテキストの表示
+          </label>
+          <select
+            value={styleSettings.textWrap || 'nowrap'}
+            onChange={(e) => updateStyleSetting('textWrap', e.target.value as any)}
+            style={{
+              width: '100%',
+              padding: '8px',
+              backgroundColor: '#333',
+              color: 'white',
+              border: '1px solid #555',
+              borderRadius: '4px',
+            }}
+          >
+            <option value="nowrap">1行で表示（はみ出る）</option>
+            <option value="wrap">改行して表示</option>
+            <option value="auto">自動調整</option>
+          </select>
+        </div>
+
+        {/* 発光エフェクト */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+            発光エフェクト
+          </label>
+          <select
+            value={styleSettings.glowEffect || 'none'}
+            onChange={(e) => updateStyleSetting('glowEffect', e.target.value as any)}
+            style={{
+              width: '100%',
+              padding: '8px',
+              backgroundColor: '#333',
+              color: 'white',
+              border: '1px solid #555',
+              borderRadius: '4px',
+            }}
+          >
+            <option value="none">なし</option>
+            <option value="soft">ソフト発光</option>
+            <option value="strong">強い発光</option>
+            <option value="neon">ネオン</option>
+            <option value="pulse">パルス</option>
+            <option value="rainbow">レインボー</option>
+          </select>
+        </div>
+
+        {/* 発光色 */}
+        {styleSettings.glowEffect && styleSettings.glowEffect !== 'none' && styleSettings.glowEffect !== 'rainbow' && (
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+              発光色
+            </label>
+            <input
+              type="color"
+              value={styleSettings.glowColor || '#ffffff'}
+              onChange={(e) => updateStyleSetting('glowColor', e.target.value)}
+              style={{ width: '100%', height: '40px', cursor: 'pointer' }}
+            />
+          </div>
+        )}
+
+        {/* 歌詞タイミング調整リスト */}
+        <div style={{
+          backgroundColor: '#1a1a2e',
+          padding: '15px',
+          borderRadius: '8px',
+          marginTop: '20px',
+        }}>
+          <h4 style={{ margin: '0 0 15px 0', color: '#4f46e5' }}>
+            ⏰ 歌詞タイミング調整
+          </h4>
+          <div style={{
+            maxHeight: '200px',
+            overflowY: 'auto',
+          }}>
+            {lyrics.map((line, index) => (
+              <div
+                key={index}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '5px',
+                  backgroundColor: index === selectedLyricIndex ? 'rgba(234, 179, 8, 0.2)' : 
+                                  index === currentLyricIndex ? 'rgba(79, 70, 229, 0.2)' : 'transparent',
+                  borderRadius: '3px',
+                  marginBottom: '3px',
+                  cursor: 'pointer',
+                }}
+                onClick={() => setSelectedLyricIndex(index)}
+              >
+                <span style={{ width: '25px', fontSize: '11px', color: '#999' }}>
+                  {index + 1}.
+                </span>
+                <span style={{ flex: 1, fontSize: '11px', color: '#ccc', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {line.text}
+                </span>
+                <input
+                  type="number"
+                  value={line.startTime.toFixed(1)}
+                  onChange={(e) => {
+                    const newLyrics = [...lyrics];
+                    newLyrics[index].startTime = parseFloat(e.target.value) || 0;
+                    onLyricsChange(newLyrics);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    width: '45px',
+                    padding: '2px',
+                    fontSize: '10px',
+                    backgroundColor: '#333',
+                    color: 'white',
+                    border: '1px solid #555',
+                    borderRadius: '2px',
+                  }}
+                  step="0.1"
+                />
+                <span style={{ fontSize: '10px', color: '#666' }}>-</span>
+                <input
+                  type="number"
+                  value={line.endTime.toFixed(1)}
+                  onChange={(e) => {
+                    const newLyrics = [...lyrics];
+                    newLyrics[index].endTime = parseFloat(e.target.value) || 0;
+                    onLyricsChange(newLyrics);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    width: '45px',
+                    padding: '2px',
+                    fontSize: '10px',
+                    backgroundColor: '#333',
+                    color: 'white',
+                    border: '1px solid #555',
+                    borderRadius: '2px',
+                  }}
+                  step="0.1"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* スクロールテスト用コンテンツ */}
+        <div style={{
+          backgroundColor: '#2a2a3e',
+          padding: '15px',
+          borderRadius: '8px',
+          marginTop: '20px',
+          border: '1px solid #4f46e5'
+        }}>
+          <h4 style={{ margin: '0 0 10px 0', color: '#4f46e5', fontSize: '14px' }}>
+            📋 スクロールテスト
+          </h4>
+          <div style={{ fontSize: '12px', color: '#ccc' }}>
+            <div>✅ この部分が見えればスクロール成功！</div>
+            <div>現在時間: {currentTime.toFixed(1)}秒</div>
+            <div>歌詞行数: {lyrics.length}</div>
+            <div>音声ファイル: {currentAudioFile ? '✅ 読み込み済み' : '❌ 未選択'}</div>
+            <div>マウスホイールでスクロールしてください ↕️</div>
+          </div>
+        </div>
+
+        {/* 追加のスクロールテスト項目 */}
+        {[1,2,3,4,5].map(i => (
+          <div key={i} style={{
+            backgroundColor: '#1e1e2e',
+            padding: '10px',
+            borderRadius: '4px',
+            marginTop: '10px',
+            border: '1px solid #333'
+          }}>
+            <div style={{ fontSize: '12px', color: '#999' }}>
+              スクロールテスト項目 {i}
+            </div>
+          </div>
+        ))}
+        
+        {/* スクロール用の下部余白 */}
+        <div style={{ height: '80px', flexShrink: 0 }}></div>
+      </div>
+
+      {/* メインエリア */}
+      <div style={mainAreaStyle}>
+        {/* プレビューエリア */}
+        <div style={previewStyle}>
+          {currentLyricIndex >= 0 && (
+            <div
+              key={currentLyricIndex}
+              style={{
+                fontSize: `${styleSettings.fontSize}px`,
+                fontFamily: styleSettings.fontFamily,
+                color: styleSettings.fontColor,
+                textAlign: 'center',
+                WebkitTextStroke: `${styleSettings.strokeWidth}px ${styleSettings.strokeColor}`,
+                fontWeight: 'bold',
+                lineHeight: 1.2,
+                maxWidth: styleSettings.textWrap === 'nowrap' ? 'none' : '90%',
+                whiteSpace: styleSettings.textWrap === 'wrap' ? 'normal' : 
+                           styleSettings.textWrap === 'auto' ? 'pre-wrap' : 'nowrap',
+                overflow: 'visible',
+                wordBreak: styleSettings.textWrap === 'wrap' ? 'break-word' : 'normal',
+                position: 'absolute',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                ...(styleSettings.position === 'bottom' ? {
+                  bottom: `${100 + (styleSettings.yOffset || 0)}px`
+                } : styleSettings.position === 'top' ? {
+                  top: `${100 + (styleSettings.yOffset || 0)}px`
+                } : {
+                  top: '50%',
+                  transform: `translate(-50%, calc(-50% + ${styleSettings.yOffset || 0}px))`
+                }),
+                // アニメーション効果
+                ...(() => {
+                  const currentLine = lyrics[currentLyricIndex];
+                  const timeSinceStart = currentTime - currentLine.startTime;
+                  const timeUntilEnd = currentLine.endTime - currentTime;
+                  const animationDuration = styleSettings.fadeSpeed || 0.5;
+                  
+                  // フェードイン・フェードアウトの計算
+                  let opacity = 1;
+                  let transform = 'translateX(-50%)';
+                  let scale = 1;
+                  
+                  if (styleSettings.animationStyle === 'fade') {
+                    if (timeSinceStart < animationDuration) {
+                      opacity = timeSinceStart / animationDuration;
+                    } else if (timeUntilEnd < animationDuration) {
+                      opacity = timeUntilEnd / animationDuration;
+                    }
+                  } else if (styleSettings.animationStyle === 'scale') {
+                    if (timeSinceStart < animationDuration) {
+                      const progress = timeSinceStart / animationDuration;
+                      scale = 0.5 + (progress * 0.5);
+                      opacity = progress;
+                    } else if (timeUntilEnd < animationDuration) {
+                      const progress = timeUntilEnd / animationDuration;
+                      scale = 0.5 + (progress * 0.5);
+                      opacity = progress;
+                    }
+                  } else if (styleSettings.animationStyle === 'slide') {
+                    if (timeSinceStart < animationDuration) {
+                      const progress = timeSinceStart / animationDuration;
+                      const slideX = -50 + (progress * (-50));
+                      transform = `translateX(${slideX}%)`;
+                      opacity = progress;
+                    } else if (timeUntilEnd < animationDuration) {
+                      opacity = timeUntilEnd / animationDuration;
+                    }
+                  }
+                  
+                  return {
+                    opacity: Math.max(0, Math.min(1, opacity)),
+                    transform: styleSettings.position === 'center' ? 
+                      `translate(-50%, calc(-50% + ${styleSettings.yOffset || 0}px)) scale(${scale})` :
+                      `${transform} scale(${scale})`,
+                    transition: 'none',
+                  };
+                })(),
+                // 発光エフェクト＋アニメ風影
+                ...(styleSettings.glowEffect === 'soft' ? {
+                  textShadow: `
+                    2px 2px 0px rgba(0,0,0,0.8),
+                    4px 4px 8px rgba(0,0,0,0.5),
+                    0 0 10px ${styleSettings.glowColor || '#ffffff'},
+                    0 0 20px ${styleSettings.glowColor || '#ffffff'}`
+                } : styleSettings.glowEffect === 'strong' ? {
+                  textShadow: `
+                    2px 2px 0px rgba(0,0,0,0.8),
+                    0 0 20px ${styleSettings.glowColor || '#ffffff'},
+                    0 0 40px ${styleSettings.glowColor || '#ffffff'},
+                    0 0 60px ${styleSettings.glowColor || '#ffffff'}`
+                } : styleSettings.glowEffect === 'neon' ? {
+                  textShadow: `
+                    0 0 10px ${styleSettings.glowColor || '#ffffff'},
+                    0 0 20px ${styleSettings.glowColor || '#ffffff'},
+                    0 0 30px ${styleSettings.glowColor || '#ffffff'},
+                    0 0 40px ${styleSettings.glowColor || '#ffffff'}`
+                } : styleSettings.glowEffect === 'pulse' ? {
+                  textShadow: `2px 2px 0px rgba(0,0,0,0.8), 0 0 20px ${styleSettings.glowColor || '#ffffff'}`,
+                  animation: 'pulse 1.5s ease-in-out infinite'
+                } : styleSettings.glowEffect === 'rainbow' ? {
+                  animation: 'rainbow 3s linear infinite'
+                } : {
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.8), 4px 4px 8px rgba(0,0,0,0.5)'
+                })
+              }}
+            >
+              {lyrics[currentLyricIndex].text}
+            </div>
+          )}
+          
+          {/* アニメーション用のスタイル */}
+          <style>{`
+            @keyframes pulse {
+              0%, 100% { opacity: 1; filter: brightness(1); }
+              50% { opacity: 0.8; filter: brightness(1.3); }
+            }
+            
+            @keyframes rainbow {
+              0% { filter: hue-rotate(0deg); text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000; }
+              33% { filter: hue-rotate(120deg); text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00; }
+              66% { filter: hue-rotate(240deg); text-shadow: 0 0 20px #0000ff, 0 0 40px #0000ff; }
+              100% { filter: hue-rotate(360deg); text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000; }
+            }
+
+            /* スクロールバーのスタイリング */
+            *::-webkit-scrollbar {
+              width: 12px;
+            }
+            
+            *::-webkit-scrollbar-track {
+              background: #1a1a1a;
+              border-radius: 6px;
+            }
+            
+            *::-webkit-scrollbar-thumb {
+              background: #4f46e5;
+              border-radius: 6px;
+              border: 2px solid #1a1a1a;
+            }
+            
+            *::-webkit-scrollbar-thumb:hover {
+              background: #6366f1;
+            }
+
+            /* スクロール可能なコンテンツ */
+            .scrollable-content {
+              overflow-y: scroll !important;
+              overflow-x: hidden !important;
+              height: 100% !important;
+              scrollbar-width: auto !important;
+            }
+
+            /* スクロールバーを常に表示 */
+            .scrollable-content::-webkit-scrollbar {
+              width: 14px !important;
+              background: #1a1a1a !important;
+            }
+            
+            .scrollable-content::-webkit-scrollbar-track {
+              background: #1a1a1a !important;
+              border-radius: 7px !important;
+            }
+            
+            .scrollable-content::-webkit-scrollbar-thumb {
+              background: #4f46e5 !important;
+              border-radius: 7px !important;
+              border: 2px solid #1a1a1a !important;
+              min-height: 40px !important;
+            }
+            
+            .scrollable-content::-webkit-scrollbar-thumb:hover {
+              background: #6366f1 !important;
+            }
+
+            /* Firefox用のスクロールバー */
+            .scrollable-content {
+              scrollbar-width: auto !important;
+              scrollbar-color: #4f46e5 #1a1a1a !important;
+            }
+
+            /* 強制スクロール */
+            .force-scroll {
+              overflow-y: scroll !important;
+              overflow-x: hidden !important;
+              -webkit-overflow-scrolling: touch !important;
+            }
+          `}</style>
+        </div>
+
+        {/* タイムライン */}
+        <div style={timelineStyle}>
+          <h3 style={{ margin: '0 0 10px 0' }}>🎵 波形タイムライン</h3>
+          <canvas
+            ref={canvasRef}
+            width={800}
+            height={120}
+            style={{
+              width: '100%',
+              height: '120px',
+              border: '1px solid #333',
+              cursor: 'pointer',
+            }}
+            onClick={handleTimelineClick}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          />
+          <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: '#ccc' }}>
+            💡 クリックで時間移動 | 歌詞ブロックをドラッグでタイミング調整 | 端をドラッグで開始/終了時間を個別調整
+          </p>
+        </div>
+
+        {/* 再生コントロール */}
+        <div style={controlsStyle}>
+          <button
+            onClick={togglePlay}
+            disabled={!currentAudioFile}
+            style={{
+              backgroundColor: currentAudioFile ? '#4f46e5' : '#9333ea',
+              color: 'white',
+              border: '2px solid ' + (currentAudioFile ? '#6366f1' : '#a855f7'),
+              borderRadius: '8px',
+              padding: '15px 30px',
+              cursor: currentAudioFile ? 'pointer' : 'not-allowed',
+              fontSize: '20px',
+              minWidth: '120px',
+              fontWeight: 'bold',
+              boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              if (currentAudioFile) {
+                e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.boxShadow = '0 6px 8px rgba(0,0,0,0.4)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.3)';
+            }}
+          >
+            {isPlaying ? '⏸️ 停止' : '▶️ 再生'}
+          </button>
+
+          <div style={{ flex: 1, fontSize: '14px', color: 'white' }}>
+            <div>現在: {Math.floor(currentTime / 60)}:{Math.floor(currentTime % 60).toString().padStart(2, '0')}</div>
+            <div>行: {currentLyricIndex >= 0 ? currentLyricIndex + 1 : '-'} / {lyrics.length}</div>
+          </div>
+
+          <button
+            onClick={() => {
+              // Remotionのレンダー機能を呼び出す
+              alert('レンダーを開始します。Remotion Studioの右上の"Render"ボタンをクリックしてください。');
+            }}
+            style={{
+              backgroundColor: '#10b981',
+              color: 'white',
+              border: '2px solid #34d399',
+              borderRadius: '8px',
+              padding: '15px 25px',
+              cursor: 'pointer',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
+              transition: 'all 0.2s',
+              minWidth: '180px',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = '0 6px 8px rgba(0,0,0,0.4)';
+              e.currentTarget.style.backgroundColor = '#059669';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.3)';
+              e.currentTarget.style.backgroundColor = '#10b981';
+            }}
+          >
+            🎥 動画を書き出し
+          </button>
+
+          <input
+            type="range"
+            min="0"
+            max={duration || 100}
+            value={currentTime}
+            onChange={(e) => {
+              const time = parseFloat(e.target.value);
+              if (audioRef.current) {
+                audioRef.current.currentTime = time;
+                setCurrentTime(time);
+              }
+            }}
+            style={{
+              flex: 2,
+              height: '5px',
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
