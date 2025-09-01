@@ -36,15 +36,15 @@ const DynamicLyricsOverlay: React.FC<DynamicLyricsProps> = ({
   lyricsData = [],
   backgroundImage,
   format = 'youtube',
-  fontFamily = "'Shippori Mincho', 'しっぽり明朝', serif",
-  fontSize = 32,
+  fontFamily = "'Shippori Mincho', 'しっぽり明朝', 'Hiragino Mincho ProN', 'ヒラギノ明朝 ProN', serif",
+  fontSize = 48,
   fontColor = '#000000',
   strokeColor = '#FFFFFF',
-  strokeWidth = 3,
+  strokeWidth = 2,
   position = format === 'youtube' ? 'bottom' : 'center',
   yOffset = 0,
   animationStyle = 'fade',
-  fadeSpeed = 0.5,  // スムーズなフェードのために値を増やす
+  fadeSpeed = 0.5,
   durationOffset = 0,
 }) => {
   // デバッグ用ログ
@@ -127,35 +127,20 @@ const DynamicLyricsOverlay: React.FC<DynamicLyricsProps> = ({
       }
     );
 
-    // スケールエフェクト（少し大きくなってから元に戻る）
-    const scale = interpolate(
-      frame,
-      [lineStartFrame, lineStartFrame + animationDuration / 2, lineStartFrame + animationDuration],
-      [0.8, 1.1, 1],
-      {
-        extrapolateLeft: 'clamp',
-        extrapolateRight: 'clamp',
-        easing: Easing.out(Easing.back(1.2)),
-      }
-    );
-
+    // シンプルなフェードアニメーションのみ
     return {
       opacity: Math.min(fadeIn, fadeOut),
-      transform: `scale(${scale})`,
-      translateY: 0,  // 上下の動きを無効化
     };
   };
 
-  // 文字の輪郭設定
+  // 文字の輪郭設定（WebKitストローク方式）
   const textStyle = {
     fontFamily,
     fontSize: `${fontSize}px`,
     color: fontColor,
     textAlign: 'center' as const,
     fontWeight: 'bold',
-    textShadow: strokeWidth > 0 
-      ? `${strokeColor} 0px 0px ${strokeWidth}px, ${strokeColor} 0px 0px ${strokeWidth}px, ${strokeColor} 0px 0px ${strokeWidth}px, ${strokeColor} 0px 0px ${strokeWidth}px`
-      : 'none',
+    WebkitTextStroke: strokeWidth > 0 ? `${Math.max(0.3, strokeWidth * 0.3)}px ${strokeColor}` : 'none',
     lineHeight: 1.2,
   };
 

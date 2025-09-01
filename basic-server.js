@@ -121,12 +121,12 @@ const server = http.createServer((req, res) => {
                     position: displaySettings.position || 'bottom',
                     yOffset: displaySettings.yOffset || 0,
                     animationStyle: displaySettings.animationStyle || 'fade',
-                    fadeSpeed: displaySettings.fadeSpeed || 0.3,
+                    fadeSpeed: displaySettings.fadeSpeed || 0.5,
                     durationOffset: displaySettings.durationOffset || 0,
-                    fontSize: displaySettings.fontSize || 48,
-                    fontFamily: displaySettings.fontFamily || "'Hiragino Sans', sans-serif",
-                    fontColor: displaySettings.fontColor || '#FFFFFF',
-                    strokeColor: displaySettings.strokeColor || '#000000',
+                    fontSize: displaySettings.fontSize || 34,
+                    fontFamily: displaySettings.fontFamily || "'Shippori Mincho', 'しっぽり明朝', 'Hiragino Mincho ProN', 'ヒラギノ明朝 ProN', serif",
+                    fontColor: displaySettings.fontColor || '#000000',
+                    strokeColor: displaySettings.strokeColor || '#FFFFFF',
                     strokeWidth: displaySettings.strokeWidth || 2
                 }).replace(/"/g, '\\"');
                 

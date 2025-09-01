@@ -602,9 +602,9 @@
                         <div class="font-family-group" style="margin-bottom: 10px;">
                             <label style="font-size: 14px; color: #666;">書体:</label>
                             <select id="fontFamily" class="font-select" style="padding: 5px; border-radius: 4px; border: 1px solid #dadce0;">
-                                <option value="'Shippori Mincho', 'しっぽり明朝', serif" selected>しっぽり明朝</option>
+                                <option value="'Shippori Mincho', 'しっぽり明朝', 'Hiragino Mincho ProN', 'ヒラギノ明朝 ProN', serif" selected>しっぽり明朝</option>
+                                <option value="'Hiragino Mincho ProN', 'ヒラギノ明朝', serif">ヒラギノ明朝</option>
                                 <option value="'Hiragino Sans', 'ヒラギノ角ゴシック', sans-serif">ゴシック体</option>
-                                <option value="'Hiragino Mincho ProN', 'ヒラギノ明朝', serif">明朝体</option>
                                 <option value="'Hiragino Maru Gothic ProN', 'ヒラギノ丸ゴ', sans-serif">丸ゴシック</option>
                                 <option value="'Sawarabi Gothic', sans-serif">さわらびゴシック</option>
                                 <option value="'Noto Sans JP', sans-serif">Noto Sans JP</option>
@@ -697,13 +697,13 @@
             position: 'bottom',
             yOffset: 0,
             animationStyle: 'fade',
-            fadeSpeed: 0.3,
+            fadeSpeed: 0.5,
             durationOffset: 0,
-            fontSize: 32,  // Final Cut Pro用に調整
-            fontFamily: "'Shippori Mincho', 'しっぽり明朝', serif",  // しっぽり明朝
-            fontColor: '#000000',  // 黒文字
-            strokeColor: '#FFFFFF',  // 白縁取り
-            strokeWidth: 3,  // 縁取りを太めに
+            fontSize: 28,  // プレビューを小さく
+            fontFamily: "'Shippori Mincho', 'しっぽり明朝', 'Hiragino Mincho ProN', 'ヒラギノ明朝 ProN', serif",  // しっぽり明朝をデフォルトに
+            fontColor: '#000000',  // 白→黒に変更
+            strokeColor: '#FFFFFF',  // 黒→白に変更
+            strokeWidth: 2,
             blurType: 'soft',
             blurStrength: 4
         };
@@ -887,44 +887,25 @@
             }
         }
         
-        // テキストシャドウ生成関数
-        function createTextShadow(settings) {
-            const shadows = [];
-            
-            // 縁取り効果
+        // WebkitTextStrokeスタイル適用関数
+        function applyTextStroke(element, settings) {
+            // WebkitTextStrokeを使用（textShadowの代わり）- strokeWidthを半分に調整
             if (settings.strokeWidth > 0) {
-                const strokeShadows = [
-                    `${settings.strokeColor} 0px 0px ${settings.strokeWidth}px`,
-                    `${settings.strokeColor} 0px 0px ${settings.strokeWidth}px`,
-                    `${settings.strokeColor} 0px 0px ${settings.strokeWidth}px`,
-                    `${settings.strokeColor} 0px 0px ${settings.strokeWidth}px`
-                ];
-                shadows.push(...strokeShadows);
+                const adjustedWidth = Math.max(0.3, settings.strokeWidth * 0.3); // 0.3倍にして最小0.3px
+                element.style.webkitTextStroke = `${adjustedWidth}px ${settings.strokeColor}`;
+            } else {
+                element.style.webkitTextStroke = 'none';
             }
             
-            // ぼかし効果
+            // textShadowをクリア
+            element.style.textShadow = 'none';
+            
+            // ぼかし効果は別途フィルターで対応（必要に応じて）
             if (settings.blurType !== 'none' && settings.blurStrength > 0) {
-                let blurShadow = '';
-                switch (settings.blurType) {
-                    case 'soft':
-                        blurShadow = `rgba(0,0,0,0.3) 2px 2px ${settings.blurStrength}px`;
-                        break;
-                    case 'medium':
-                        blurShadow = `rgba(0,0,0,0.5) 3px 3px ${settings.blurStrength * 1.5}px`;
-                        break;
-                    case 'strong':
-                        blurShadow = `rgba(0,0,0,0.8) 4px 4px ${settings.blurStrength * 2}px`;
-                        break;
-                    case 'glow':
-                        // グロー効果は明るい色で
-                        const glowColor = settings.fontColor === '#000000' ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,100,0.8)';
-                        blurShadow = `${glowColor} 0px 0px ${settings.blurStrength * 2}px`;
-                        break;
-                }
-                if (blurShadow) shadows.push(blurShadow);
+                element.style.filter = `drop-shadow(2px 2px ${settings.blurStrength}px rgba(0,0,0,0.3))`;
+            } else {
+                element.style.filter = 'none';
             }
-            
-            return shadows.length > 0 ? shadows.join(', ') : 'none';
         }
         
         // リアルタイムプレビューの更新
@@ -1402,12 +1383,26 @@
         
         // プレビュー
         document.getElementById('previewBtn').addEventListener('click', () => {
+            console.log('プレビューボタンがクリックされました');
+            console.log('現在の歌詞データ:', lyricsData);
+            
+            // デバッグ用: 歌詞データが空の場合はサンプルデータを使用
             if (lyricsData.length === 0) {
-                alert('歌詞データが必要です');
+                console.warn('歌詞データが空です。サンプルデータを使用します。');
+                lyricsData = [
+                    {text: '君の笑顔が', startTime: 0, endTime: 2.5},
+                    {text: '世界を照らす', startTime: 3, endTime: 5.5},
+                    {text: '明日へと続く道', startTime: 6, endTime: 8.5}
+                ];
+            }
+            
+            const selectedFormat = document.querySelector('.format-option.selected')?.dataset?.format;
+            if (!selectedFormat) {
+                alert('フォーマットを選択してください');
                 return;
             }
             
-            const selectedFormat = document.querySelector('.format-option.selected').dataset.format;
+            console.log('選択されたフォーマット:', selectedFormat);
             showPreview(selectedFormat);
         });
         
@@ -1457,7 +1452,7 @@
             previewLyrics.style.color = displaySettings.fontColor;
             
             // 縁取りとぼかし設定
-            previewLyrics.style.textShadow = createTextShadow(displaySettings);
+            applyTextStroke(previewLyrics, displaySettings);
             
             // オーディオ要素を非表示
             const audio = document.getElementById('previewAudio');
@@ -1535,12 +1530,29 @@
 
         // 音声同期プレビュー
         document.getElementById('realtimePreviewBtn').addEventListener('click', () => {
-            if (!uploadedFiles.mp3 || lyricsData.length === 0) {
-                alert('MP3ファイルと歌詞データが必要です');
+            console.log('音声同期プレビューボタンがクリックされました');
+            
+            // デバッグ用: 歌詞データが空の場合はサンプルデータを使用
+            if (lyricsData.length === 0) {
+                console.warn('歌詞データが空です。サンプルデータを使用します。');
+                lyricsData = [
+                    {text: '君の笑顔が', startTime: 0, endTime: 2.5},
+                    {text: '世界を照らす', startTime: 3, endTime: 5.5},
+                    {text: '明日へと続く道', startTime: 6, endTime: 8.5}
+                ];
+            }
+            
+            if (!uploadedFiles.mp3) {
+                alert('音声同期プレビューにはMP3ファイルが必要です。通常プレビューをご利用ください。');
                 return;
             }
             
-            const selectedFormat = document.querySelector('.format-option.selected').dataset.format;
+            const selectedFormat = document.querySelector('.format-option.selected')?.dataset?.format;
+            if (!selectedFormat) {
+                alert('フォーマットを選択してください');
+                return;
+            }
+            
             showRealtimePreview(selectedFormat);
         });
         
@@ -1646,7 +1658,7 @@
             previewLyrics.style.color = displaySettings.fontColor;
             
             // 縁取りとぼかし設定
-            previewLyrics.style.textShadow = createTextShadow(displaySettings);
+            applyTextStroke(previewLyrics, displaySettings);
             
             // オーディオ要素の設定
             const audio = document.getElementById('previewAudio');
@@ -1706,7 +1718,7 @@
                         
                         // シンプルなスタイル設定（親要素のFlexboxで中央配置）
                         lyricDiv.style.fontWeight = 'bold';
-                        lyricDiv.style.textShadow = createTextShadow(displaySettings);
+                        applyTextStroke(lyricDiv, displaySettings);
                         lyricDiv.style.whiteSpace = 'nowrap'; // 改行を防ぐ
                         
                         previewLyrics.innerHTML = '';

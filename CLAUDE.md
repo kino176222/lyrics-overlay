@@ -219,5 +219,16 @@ MP3と歌詞テキストから、YouTube/TikTok/Instagram用の歌詞動画を�
 - 既存プロジェクト: `/Users/kino/Developer/lyrics-overlay`
 - Remotionドキュメント: https://www.remotion.dev/docs/
 - 関連ファイル: 
+  - `src/simple-app.html` (メインアプリ - ポート3003で起動)
   - `src/visual-editor.html` (既存のエディターUI)
   - `remotion.config.ts` (Remotion設定)
+
+## サーバー起動について
+
+**使用するサーバー:** ポート3003 (`basic-server.js`)
+```bash
+node basic-server.js
+```
+**アクセスURL:** http://localhost:3003/src/simple-app.html
+
+**注意:** `server.js` (ポート3002) は使用しない。混乱を避けるため。
