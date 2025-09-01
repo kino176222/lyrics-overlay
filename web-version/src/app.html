@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歌詞動画ジェネレーター</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+        }
+        
+        .upload-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .upload-box {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+        
+        .upload-box:hover {
+            border-color: #667eea;
+            background: #f0f0ff;
+        }
+        
+        .upload-box.active {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        .upload-label {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .upload-hint {
+            font-size: 14px;
+            color: #999;
+        }
+        
+        .file-name {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .process-section {
+            margin: 40px 0;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .process-section.show {
+            display: block;
+        }
+        
+        .timeline-container {
+            margin: 20px 0;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .lyrics-line {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: #f0f0f0;
+            border-radius: 5px;
+            cursor: move;
+        }
+        
+        .lyrics-line:hover {
+            background: #e0e0e0;
+        }
+        
+        .lyrics-text {
+            flex: 1;
+            margin-right: 10px;
+        }
+        
+        .time-input {
+            width: 80px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .audio-player {
+            margin: 20px 0;
+            width: 100%;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .progress-bar.show {
+            display: block;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .format-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .format-option {
+            padding: 10px 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .format-option:hover {
+            border-color: #667eea;
+        }
+        
+        .format-option.selected {
+            border-color: #667eea;
+            background: #f0f0ff;
+        }
+        
+        /* 歌詞入力モーダル */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+        
+        .modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            animation: slideIn 0.3s;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            color: #333;
+        }
+        
+        .close-btn {
+            font-size: 30px;
+            color: #999;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+        
+        .close-btn:hover {
+            color: #333;
+        }
+        
+        .lyrics-textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            resize: vertical;
+            font-family: monospace;
+        }
+        
+        .lyrics-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .modal-footer {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .modal-hint {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { 
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeInUp {
+            from { 
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 歌詞動画ジェネレーター</h1>
+        <p class="subtitle">MP3と歌詞から透明背景の歌詞動画を自動生成</p>
+        
+        <!-- ファイルアップロードセクション -->
+        <div class="upload-section">
+            <div class="upload-box" id="mp3Upload">
+                <div class="upload-icon">🎵</div>
+                <div class="upload-label">MP3ファイル</div>
+                <div class="upload-hint">クリックして選択</div>
+                <input type="file" id="mp3Input" accept="audio/mp3,audio/mpeg">
+                <div class="file-name" id="mp3FileName"></div>
+            </div>
+            
+            <div class="upload-box" id="lyricsUpload">
+                <div class="upload-icon">📝</div>
+                <div class="upload-label">歌詞テキスト</div>
+                <div class="upload-hint">クリックして入力 or Shift+クリックでファイル選択</div>
+                <input type="file" id="lyricsInput" accept="text/plain">
+                <div class="file-name" id="lyricsFileName"></div>
+            </div>
+            
+            <div class="upload-box" id="bgUpload">
+                <div class="upload-icon">🖼️</div>
+                <div class="upload-label">背景画像（オプション）</div>
+                <div class="upload-hint">JPG/PNG</div>
+                <input type="file" id="bgInput" accept="image/jpeg,image/png">
+                <div class="file-name" id="bgFileName"></div>
+            </div>
+        </div>
+        
+        <!-- 処理セクション -->
+        <div class="process-section" id="processSection">
+            <h2>🎯 タイミング調整</h2>
+            
+            <!-- オーディオプレーヤー -->
+            <audio controls class="audio-player" id="audioPlayer"></audio>
+            
+            <!-- フォーマット選択 -->
+            <div class="format-selector">
+                <div class="format-option selected" data-format="youtube">
+                    📺 YouTube (16:9)
+                </div>
+                <div class="format-option" data-format="tiktok">
+                    📱 TikTok (9:16)
+                </div>
+                <div class="format-option" data-format="instagram">
+                    📷 Instagram (9:16)
+                </div>
+            </div>
+            
+            <!-- タイムライン -->
+            <div class="timeline-container" id="timelineContainer">
+                <!-- 歌詞行が動的に追加される -->
+            </div>
+            
+            <!-- アクションボタン -->
+            <div class="action-buttons">
+                <button class="btn btn-secondary" id="autoSyncBtn">
+                    🤖 AI自動認識
+                </button>
+                <button class="btn btn-primary" id="previewBtn">
+                    👁️ プレビュー
+                </button>
+                <button class="btn btn-primary" id="audioPreviewBtn">
+                    🎵 音声同期プレビュー
+                </button>
+                <button class="btn btn-success" id="generateBtn">
+                    🎬 動画生成
+                </button>
+            </div>
+        </div>
+        
+        <!-- プログレスバー -->
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill">0%</div>
+        </div>
+    </div>
+    
+    <!-- 歌詞入力モーダル -->
+    <div class="modal" id="lyricsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">📝 歌詞を入力</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-hint">歌詞をコピー＆ペーストするか、直接入力してください（1行ずつ改行）</div>
+            <textarea class="lyrics-textarea" id="lyricsTextarea" placeholder="例：
+君の笑顔が
+世界を照らす
+明日へと続く
+この道を歩もう"></textarea>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelLyrics">キャンセル</button>
+                <button class="btn btn-primary" id="confirmLyrics">確定</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ファイルアップロードの処理
+        const mp3Upload = document.getElementById('mp3Upload');
+        const mp3Input = document.getElementById('mp3Input');
+        const mp3FileName = document.getElementById('mp3FileName');
+        
+        const lyricsUpload = document.getElementById('lyricsUpload');
+        const lyricsInput = document.getElementById('lyricsInput');
+        const lyricsFileName = document.getElementById('lyricsFileName');
+        
+        const bgUpload = document.getElementById('bgUpload');
+        const bgInput = document.getElementById('bgInput');
+        const bgFileName = document.getElementById('bgFileName');
+        
+        const processSection = document.getElementById('processSection');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const timelineContainer = document.getElementById('timelineContainer');
+        
+        let uploadedFiles = {
+            mp3: null,
+            lyrics: null,
+            background: null
+        };
+        
+        let lyricsData = [];
+        
+        // MP3アップロード
+        mp3Upload.addEventListener('click', () => mp3Input.click());
+        mp3Input.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                uploadedFiles.mp3 = file;
+                mp3FileName.textContent = file.name;
+                mp3Upload.classList.add('active');
+                
+                // オーディオプレーヤーに設定
+                const url = URL.createObjectURL(file);
+                audioPlayer.src = url;
+                
+                checkFilesAndShowProcess();
+            }
+        });
+        
+        // 歌詞アップロード（クリックでモーダル表示）
+        const lyricsModal = document.getElementById('lyricsModal');
+        const lyricsTextarea = document.getElementById('lyricsTextarea');
+        const closeModal = document.getElementById('closeModal');
+        const cancelLyrics = document.getElementById('cancelLyrics');
+        const confirmLyrics = document.getElementById('confirmLyrics');
+        
+        lyricsUpload.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Shiftキーを押しながらクリックした場合はファイル選択
+            if (e.shiftKey) {
+                lyricsInput.click();
+            } else {
+                // 通常クリックはモーダル表示
+                lyricsModal.classList.add('show');
+                lyricsTextarea.focus();
+            }
+        });
+        
+        // ファイル選択の処理
+        lyricsInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                uploadedFiles.lyrics = file;
+                lyricsFileName.textContent = file.name;
+                lyricsUpload.classList.add('active');
+                
+                // 歌詞を読み込んでタイムラインに表示
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const text = e.target.result;
+                    displayLyrics(text);
+                };
+                reader.readAsText(file);
+                
+                checkFilesAndShowProcess();
+            }
+        });
+        
+        // モーダルを閉じる
+        closeModal.addEventListener('click', () => {
+            lyricsModal.classList.remove('show');
+        });
+        
+        cancelLyrics.addEventListener('click', () => {
+            lyricsModal.classList.remove('show');
+        });
+        
+        // モーダル外クリックで閉じる
+        lyricsModal.addEventListener('click', (e) => {
+            if (e.target === lyricsModal) {
+                lyricsModal.classList.remove('show');
+            }
+        });
+        
+        // 歌詞確定
+        confirmLyrics.addEventListener('click', () => {
+            const text = lyricsTextarea.value.trim();
+            if (text) {
+                // テキストをファイルとして扱う
+                const blob = new Blob([text], { type: 'text/plain' });
+                uploadedFiles.lyrics = new File([blob], 'lyrics.txt', { type: 'text/plain' });
+                lyricsFileName.textContent = '直接入力した歌詞';
+                lyricsUpload.classList.add('active');
+                
+                displayLyrics(text);
+                checkFilesAndShowProcess();
+                lyricsModal.classList.remove('show');
+            } else {
+                alert('歌詞を入力してください');
+            }
+        });
+        
+        // 背景画像アップロード
+        bgUpload.addEventListener('click', () => bgInput.click());
+        bgInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                uploadedFiles.background = file;
+                bgFileName.textContent = file.name;
+                bgUpload.classList.add('active');
+            }
+        });
+        
+        // ファイルチェックと処理セクション表示
+        function checkFilesAndShowProcess() {
+            if (uploadedFiles.mp3 && uploadedFiles.lyrics) {
+                processSection.classList.add('show');
+            }
+        }
+        
+        // 歌詞をタイムラインに表示
+        function displayLyrics(text) {
+            const lines = text.split('\n').filter(line => line.trim());
+            timelineContainer.innerHTML = '';
+            lyricsData = [];
+            
+            lines.forEach((line, index) => {
+                const startTime = index * 3; // 仮のタイミング（3秒間隔）
+                lyricsData.push({
+                    text: line,
+                    startTime: startTime,
+                    endTime: startTime + 2.5
+                });
+                
+                const lineElement = document.createElement('div');
+                lineElement.className = 'lyrics-line';
+                lineElement.innerHTML = `
+                    <span class="lyrics-text">${line}</span>
+                    <input type="text" class="time-input" value="${startTime.toFixed(1)}s" data-index="${index}">
+                `;
+                timelineContainer.appendChild(lineElement);
+            });
+        }
+        
+        // AI自動認識ボタン
+        document.getElementById('autoSyncBtn').addEventListener('click', async () => {
+            if (!uploadedFiles.mp3 || !uploadedFiles.lyrics) {
+                alert('MP3ファイルと歌詞が必要です');
+                return;
+            }
+            
+            const autoSyncBtn = document.getElementById('autoSyncBtn');
+            autoSyncBtn.disabled = true;
+            autoSyncBtn.textContent = '🤖 認識中...';
+            
+            try {
+                // AI認識をシミュレート（実際のファイルを使用）
+                await simulateAIRecognition();
+            } catch (error) {
+                console.error('AI認識エラー:', error);
+                alert('AI認識に失敗しました: ' + error.message);
+            } finally {
+                autoSyncBtn.disabled = false;
+                autoSyncBtn.textContent = '🤖 AI自動認識';
+            }
+        });
+        
+        // プレビューボタン
+        document.getElementById('previewBtn').addEventListener('click', async () => {
+            console.log('プレビューボタンがクリックされました');
+            console.log('歌詞データ:', lyricsData);
+            
+            // デバッグ用: 歌詞データが空の場合はサンプルデータを使用
+            if (lyricsData.length === 0) {
+                console.warn('歌詞データが空です。サンプルデータを使用します。');
+                lyricsData = [
+                    {text: '君の笑顔が', startTime: 0, endTime: 2.5},
+                    {text: '世界を照らす', startTime: 3, endTime: 5.5},
+                    {text: '明日へと続く道', startTime: 6, endTime: 8.5}
+                ];
+            }
+            
+            const selectedFormat = document.querySelector('.format-option.selected')?.dataset?.format;
+            if (!selectedFormat) {
+                alert('フォーマットを選択してください');
+                return;
+            }
+            
+            console.log('選択されたフォーマット:', selectedFormat);
+            
+            // シンプルなプレビュー表示
+            showSimplePreview(selectedFormat);
+        });
+        
+        // 音声同期プレビューボタン
+        document.getElementById('audioPreviewBtn').addEventListener('click', async () => {
+            console.log('音声同期プレビューボタンがクリックされました');
+            
+            if (!uploadedFiles.mp3) {
+                alert('MP3ファイルが必要です');
+                return;
+            }
+            
+            // デバッグ用: 歌詞データが空の場合はサンプルデータを使用
+            if (lyricsData.length === 0) {
+                console.warn('歌詞データが空です。サンプルデータを使用します。');
+                lyricsData = [
+                    {text: '君の笑顔が', startTime: 0, endTime: 2.5},
+                    {text: '世界を照らす', startTime: 3, endTime: 5.5},
+                    {text: '明日へと続く道', startTime: 6, endTime: 8.5}
+                ];
+            }
+            
+            const selectedFormat = document.querySelector('.format-option.selected')?.dataset?.format;
+            if (!selectedFormat) {
+                alert('フォーマットを選択してください');
+                return;
+            }
+            
+            // 音声同期プレビューを表示
+            showAudioSyncPreview(selectedFormat);
+        });
+
+        // 動画生成ボタン
+        document.getElementById('generateBtn').addEventListener('click', async () => {
+            if (!uploadedFiles.mp3 || lyricsData.length === 0) {
+                alert('MP3ファイルと歌詞データが必要です');
+                return;
+            }
+            
+            const selectedFormat = document.querySelector('.format-option.selected').dataset.format;
+            
+            await generateVideo(selectedFormat);
+        });
+        
+        // フォーマット選択
+        document.querySelectorAll('.format-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.format-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+            });
+        });
+        
+        // AI認識シミュレーション関数
+        async function simulateAIRecognition() {
+            if (!uploadedFiles.mp3) {
+                throw new Error('MP3ファイルが必要です');
+            }
+            
+            // AI-timing.jsを使用した認識をシミュレート
+            try {
+                const AITimingRecognizer = await import('./ai-timing.js');
+                const recognizer = new AITimingRecognizer.default();
+                
+                // 音声ファイルを初期化
+                await recognizer.initialize(uploadedFiles.mp3);
+                
+                // 歌詞のテキストを取得
+                const lyricsText = lyricsData.map(item => item.text);
+                
+                // タイミング認識実行
+                const recognizedTiming = await recognizer.recognizeTiming(lyricsText);
+                
+                // 結果をlyricsDataに反映
+                lyricsData = recognizedTiming;
+                
+                // UIを更新
+                updateTimeline();
+                
+                alert('AI認識が完了しました！タイミングが自動調整されました。');
+                
+            } catch (error) {
+                console.error('AI認識エラー:', error);
+                // フォールバック: 音声の長さに基づく均等配分
+                const audioDuration = await getAudioDuration(uploadedFiles.mp3);
+                const interval = audioDuration / lyricsData.length;
+                
+                lyricsData = lyricsData.map((item, index) => ({
+                    ...item,
+                    startTime: index * interval,
+                    endTime: (index + 1) * interval - 0.2,
+                    confidence: 0.5
+                }));
+                
+                updateTimeline();
+                alert('簡易的な自動調整が完了しました。手動で微調整してください。');
+            }
+        }
+        
+        // タイムライン更新関数
+        function updateTimeline() {
+            timelineContainer.innerHTML = '';
+            
+            lyricsData.forEach((item, index) => {
+                const lineElement = document.createElement('div');
+                lineElement.className = 'lyrics-line';
+                lineElement.innerHTML = `
+                    <span class="lyrics-text">${item.text}</span>
+                    <input type="text" class="time-input" value="${item.startTime.toFixed(1)}s" data-index="${index}">
+                `;
+                
+                // 時間入力のイベントリスナーを追加
+                const timeInput = lineElement.querySelector('.time-input');
+                timeInput.addEventListener('change', (e) => {
+                    const newTime = parseFloat(e.target.value.replace('s', ''));
+                    if (!isNaN(newTime)) {
+                        lyricsData[index].startTime = newTime;
+                        lyricsData[index].endTime = newTime + 2.5; // 2.5秒表示
+                    }
+                });
+                
+                timelineContainer.appendChild(lineElement);
+            });
+        }
+        
+        // 音声の長さを取得する関数
+        function getAudioDuration(audioFile) {
+            return new Promise((resolve) => {
+                const audio = new Audio();
+                audio.addEventListener('loadedmetadata', () => {
+                    resolve(audio.duration);
+                });
+                audio.src = URL.createObjectURL(audioFile);
+            });
+        }
+        
+        // シンプルプレビュー表示
+        function showSimplePreview(format) {
+            console.log('showSimplePreview関数が呼び出されました:', format);
+            console.log('現在の歌詞データ:', lyricsData);
+            
+            const isVertical = format === 'tiktok' || format === 'instagram';
+            const previewDiv = document.createElement('div');
+            previewDiv.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.8);
+                z-index: 10000;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            `;
+            
+            const containerDiv = document.createElement('div');
+            containerDiv.style.cssText = `
+                ${isVertical ? 'width: 300px; height: 533px;' : 'width: 480px; height: 270px;'}
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-radius: 12px;
+                position: relative;
+                overflow: hidden;
+                box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            `;
+            
+            const lyricsDiv = document.createElement('div');
+            lyricsDiv.style.cssText = `
+                position: absolute;
+                ${isVertical ? 'top: 50%; transform: translate(-50%, -50%);' : 'bottom: 15%; transform: translateX(-50%);'}
+                left: 50%;
+                color: white;
+                text-align: center;
+                font-family: Arial, sans-serif;
+                font-size: ${isVertical ? '20px' : '24px'};
+                font-weight: bold;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+                width: 85%;
+                line-height: 1.3;
+            `;
+            
+            // 最初の3行の歌詞を表示
+            const previewLyrics = lyricsData.slice(0, 3);
+            console.log('プレビュー用歌詞:', previewLyrics);
+            
+            if (previewLyrics.length > 0) {
+                lyricsDiv.innerHTML = previewLyrics.map(line => `<div>${line.text || '（歌詞なし）'}</div>`).join('');
+            } else {
+                lyricsDiv.innerHTML = '<div style="color: rgba(255,255,255,0.7); font-style: italic;">♪ 歌詞を読み込み中 ♪</div>';
+            }
+            
+            const formatLabel = document.createElement('div');
+            formatLabel.style.cssText = `
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                background: rgba(0,0,0,0.6);
+                color: white;
+                padding: 6px 10px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: bold;
+            `;
+            formatLabel.textContent = format.toUpperCase();
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.style.cssText = `
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: rgba(255,255,255,0.2);
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                cursor: pointer;
+                font-size: 18px;
+            `;
+            closeBtn.textContent = '×';
+            closeBtn.onclick = () => document.body.removeChild(previewDiv);
+            
+            containerDiv.appendChild(formatLabel);
+            containerDiv.appendChild(lyricsDiv);
+            containerDiv.appendChild(closeBtn);
+            previewDiv.appendChild(containerDiv);
+            
+            // プレビューを閉じる
+            previewDiv.onclick = (e) => {
+                if (e.target === previewDiv) {
+                    document.body.removeChild(previewDiv);
+                }
+            };
+            
+            document.body.appendChild(previewDiv);
+        }
+        
+        // 音声同期プレビュー表示
+        function showAudioSyncPreview(format) {
+            console.log('showAudioSyncPreview関数が呼び出されました:', format);
+            
+            const isVertical = format === 'tiktok' || format === 'instagram';
+            const previewDiv = document.createElement('div');
+            previewDiv.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.9);
+                z-index: 10000;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                flex-direction: column;
+            `;
+            
+            const containerDiv = document.createElement('div');
+            containerDiv.style.cssText = `
+                ${isVertical ? 'width: 350px; height: 622px;' : 'width: 480px; height: 270px;'}
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-radius: 12px;
+                position: relative;
+                overflow: hidden;
+                box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+                margin-bottom: 20px;
+            `;
+            
+            const lyricsDiv = document.createElement('div');
+            lyricsDiv.style.cssText = `
+                position: absolute;
+                ${isVertical ? 'top: 50%; transform: translate(-50%, -50%);' : 'bottom: 15%; transform: translateX(-50%);'}
+                left: 50%;
+                color: white;
+                text-align: center;
+                font-family: Arial, sans-serif;
+                font-size: ${isVertical ? '22px' : '28px'};
+                font-weight: bold;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+                width: 85%;
+                line-height: 1.3;
+                min-height: 40px;
+            `;
+            lyricsDiv.id = 'syncPreviewLyrics';
+            
+            const formatLabel = document.createElement('div');
+            formatLabel.style.cssText = `
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                background: rgba(0,0,0,0.6);
+                color: white;
+                padding: 6px 10px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: bold;
+            `;
+            formatLabel.textContent = format.toUpperCase();
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.style.cssText = `
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: rgba(255,255,255,0.2);
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                cursor: pointer;
+                font-size: 18px;
+            `;
+            closeBtn.textContent = '×';
+            
+            // オーディオプレーヤー（見た目を改善）
+            const audioPlayer = document.createElement('audio');
+            audioPlayer.controls = true;
+            audioPlayer.style.cssText = `
+                width: 100%;
+                max-width: 500px;
+                margin: 0 20px;
+                border-radius: 8px;
+            `;
+            audioPlayer.src = URL.createObjectURL(uploadedFiles.mp3);
+            
+            // 再生時間表示
+            const timeDisplay = document.createElement('div');
+            timeDisplay.style.cssText = `
+                color: white;
+                font-size: 18px;
+                font-weight: bold;
+                margin: 10px 0;
+                text-align: center;
+            `;
+            timeDisplay.textContent = '0:00';
+            
+            // コントロールボタン
+            const controlsDiv = document.createElement('div');
+            controlsDiv.style.cssText = `
+                display: flex;
+                gap: 15px;
+                justify-content: center;
+                margin: 20px 0;
+            `;
+            
+            const playBtn = document.createElement('button');
+            playBtn.textContent = '▶️ 再生';
+            playBtn.className = 'btn btn-primary';
+            
+            const pauseBtn = document.createElement('button');
+            pauseBtn.textContent = '⏸️ 一時停止';
+            pauseBtn.className = 'btn btn-secondary';
+            
+            const resetBtn = document.createElement('button');
+            resetBtn.textContent = '⏹️ リセット';
+            resetBtn.className = 'btn btn-secondary';
+            
+            controlsDiv.appendChild(playBtn);
+            controlsDiv.appendChild(pauseBtn);
+            controlsDiv.appendChild(resetBtn);
+            
+            // 歌詞表示を初期化
+            lyricsDiv.innerHTML = '<div style="color: rgba(255,255,255,0.7); font-style: italic;">♪ 再生を開始してください ♪</div>';
+            
+            containerDiv.appendChild(formatLabel);
+            containerDiv.appendChild(lyricsDiv);
+            containerDiv.appendChild(closeBtn);
+            previewDiv.appendChild(containerDiv);
+            previewDiv.appendChild(audioPlayer);
+            previewDiv.appendChild(timeDisplay);
+            previewDiv.appendChild(controlsDiv);
+            
+            // イベントリスナー設定
+            let animationId = null;
+            
+            // 音声の時間更新
+            audioPlayer.addEventListener('timeupdate', () => {
+                const currentTime = audioPlayer.currentTime;
+                const minutes = Math.floor(currentTime / 60);
+                const seconds = Math.floor(currentTime % 60);
+                timeDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                // 現在時刻に対応する歌詞を表示
+                updateLyricsDisplay(currentTime);
+            });
+            
+            // 再生ボタン
+            playBtn.onclick = () => {
+                audioPlayer.play();
+            };
+            
+            // 一時停止ボタン
+            pauseBtn.onclick = () => {
+                audioPlayer.pause();
+            };
+            
+            // リセットボタン
+            resetBtn.onclick = () => {
+                audioPlayer.pause();
+                audioPlayer.currentTime = 0;
+                lyricsDiv.innerHTML = '<div style="color: rgba(255,255,255,0.7); font-style: italic;">♪ 再生を開始してください ♪</div>';
+            };
+            
+            // 閉じるボタン
+            closeBtn.onclick = () => {
+                audioPlayer.pause();
+                if (animationId) cancelAnimationFrame(animationId);
+                document.body.removeChild(previewDiv);
+            };
+            
+            // プレビューを閉じる（背景クリック）
+            previewDiv.onclick = (e) => {
+                if (e.target === previewDiv) {
+                    audioPlayer.pause();
+                    if (animationId) cancelAnimationFrame(animationId);
+                    document.body.removeChild(previewDiv);
+                }
+            };
+            
+            // 歌詞表示更新関数
+            function updateLyricsDisplay(currentTime) {
+                const currentLyrics = lyricsData.filter(
+                    line => currentTime >= line.startTime && currentTime <= line.endTime
+                );
+                
+                if (currentLyrics.length > 0) {
+                    lyricsDiv.innerHTML = currentLyrics
+                        .map(line => `<div style="animation: fadeInUp 0.3s ease-out;">${line.text}</div>`)
+                        .join('');
+                } else {
+                    // 次の歌詞が近い場合は予告表示
+                    const nextLyric = lyricsData.find(line => line.startTime > currentTime);
+                    if (nextLyric && nextLyric.startTime - currentTime < 1) {
+                        lyricsDiv.innerHTML = `<div style="color: rgba(255,255,255,0.5); font-style: italic; opacity: 0.7;">♪ ${nextLyric.text} ♪</div>`;
+                    } else {
+                        lyricsDiv.innerHTML = '<div style="color: rgba(255,255,255,0.3); font-style: italic;">♪</div>';
+                    }
+                }
+            }
+            
+            document.body.appendChild(previewDiv);
+        }
+        
+        // 動的プレビュー生成関数（使用停止）
+        function generateAnimatedPreview(format) {
+            const isVertical = format === 'tiktok' || format === 'instagram';
+            const containerStyle = isVertical 
+                ? 'width: 350px; height: 622px;'
+                : 'width: 480px; height: 270px;';
+
+            // 歌詞データをJavaScript文字列として準備
+            // HTMLに安全に埋め込むためのエスケープ処理
+            const lyricsJsonString = JSON.stringify(lyricsData).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+
+            const htmlContent = `
+                <html>
+                    <head>
+                        <title>動的プレビュー - ${format.toUpperCase()}</title>
+                        <style>
+                            body { 
+                                margin: 0; 
+                                padding: 20px; 
+                                background: #f0f0f0; 
+                                font-family: Arial, sans-serif; 
+                                text-align: center;
+                            }
+                            h2 { 
+                                color: #333; 
+                                margin-bottom: 10px;
+                            }
+                            .preview-container {
+                                ${containerStyle}
+                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                position: relative;
+                                border-radius: 12px;
+                                overflow: hidden;
+                                margin: 20px auto;
+                                box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+                            }
+                            .lyrics-display {
+                                position: absolute;
+                                ${isVertical ? 'top: 50%; transform: translate(-50%, -50%);' : 'bottom: 15%; transform: translateX(-50%);'}
+                                left: 50%;
+                                color: white;
+                                text-align: center;
+                                font-family: Arial, sans-serif;
+                                font-size: ${isVertical ? '22px' : '28px'};
+                                font-weight: bold;
+                                text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+                                width: 85%;
+                                line-height: 1.3;
+                                min-height: 40px;
+                            }
+                            .format-label {
+                                position: absolute;
+                                top: 10px;
+                                left: 10px;
+                                background: rgba(0,0,0,0.6);
+                                color: white;
+                                padding: 6px 10px;
+                                border-radius: 6px;
+                                font-size: 12px;
+                                font-weight: bold;
+                            }
+                            .time-control {
+                                margin: 20px 0;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                gap: 10px;
+                            }
+                            .time-slider {
+                                width: 300px;
+                                height: 6px;
+                                border-radius: 3px;
+                                background: #ddd;
+                                outline: none;
+                                cursor: pointer;
+                            }
+                            .control-buttons {
+                                margin: 15px 0;
+                            }
+                            .btn {
+                                padding: 8px 15px;
+                                margin: 0 5px;
+                                background: #667eea;
+                                color: white;
+                                border: none;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-weight: bold;
+                            }
+                            .btn:hover {
+                                background: #5a6fd8;
+                            }
+                            .time-display {
+                                font-size: 18px;
+                                font-weight: bold;
+                                color: #333;
+                                margin: 10px 0;
+                            }
+                            .lyrics-line {
+                                margin-bottom: 8px;
+                                padding: 4px;
+                                opacity: 0;
+                                transform: translateY(20px);
+                                transition: all 0.5s ease;
+                            }
+                            .lyrics-line.active {
+                                opacity: 1;
+                                transform: translateY(0);
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h2>🎥 動的プレビュー (${format.toUpperCase()})</h2>
+                        
+                        <div class="preview-container">
+                            <div class="format-label">${format.toUpperCase()}</div>
+                            <div class="lyrics-display" id="lyricsDisplay">
+                                <!-- 歌詞がここに表示されます -->
+                            </div>
+                        </div>
+                        
+                        <div class="time-display" id="timeDisplay">0.0秒</div>
+                        
+                        <div class="time-control">
+                            <span>0s</span>
+                            <input type="range" id="timeSlider" class="time-slider" min="0" max="30" step="0.1" value="0">
+                            <span id="maxTime">30s</span>
+                        </div>
+                        
+                        <div class="control-buttons">
+                            <button class="btn" onclick="playPreview()">▶️ 再生</button>
+                            <button class="btn" onclick="pausePreview()">⏸️ 一時停止</button>
+                            <button class="btn" onclick="resetPreview()">⏹️ リセット</button>
+                        </div>
+                        
+                        <div style="margin-top: 20px;">
+                            <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                                閉じる
+                            </button>
+                        </div>
+                        
+                        <script>
+                            const lyricsData = ${lyricsJsonString};
+                            let currentTime = 0;
+                            let isPlaying = false;
+                            let animationId = null;
+                            
+                            const lyricsDisplay = document.getElementById('lyricsDisplay');
+                            const timeDisplay = document.getElementById('timeDisplay');
+                            const timeSlider = document.getElementById('timeSlider');
+                            const maxTimeSpan = document.getElementById('maxTime');
+                            
+                            // 最大時間を設定
+                            const maxTime = Math.max(...lyricsData.map(item => item.endTime), 30);
+                            timeSlider.max = maxTime;
+                            maxTimeSpan.textContent = maxTime + 's';
+                            
+                            function updateDisplay() {
+                                // 現在時刻の歌詞を取得
+                                const currentLyrics = lyricsData.filter(
+                                    line => currentTime >= line.startTime && currentTime <= line.endTime
+                                );
+                                
+                                // 歌詞表示を更新
+                                if (currentLyrics.length > 0) {
+                                    lyricsDisplay.innerHTML = currentLyrics
+                                        .map(line => '<div class="lyrics-line active">' + line.text + '</div>')
+                                        .join('');
+                                } else {
+                                    lyricsDisplay.innerHTML = '<div style="color: rgba(255,255,255,0.5); font-style: italic;">♪ 歌詞待機中 ♪</div>';
+                                }
+                                
+                                // 時間表示を更新
+                                timeDisplay.textContent = currentTime.toFixed(1) + '秒';
+                                timeSlider.value = currentTime;
+                            }
+                            
+                            function playPreview() {
+                                isPlaying = true;
+                                animate();
+                            }
+                            
+                            function pausePreview() {
+                                isPlaying = false;
+                                if (animationId) {
+                                    cancelAnimationFrame(animationId);
+                                }
+                            }
+                            
+                            function resetPreview() {
+                                isPlaying = false;
+                                currentTime = 0;
+                                if (animationId) {
+                                    cancelAnimationFrame(animationId);
+                                }
+                                updateDisplay();
+                            }
+                            
+                            function animate() {
+                                if (!isPlaying) return;
+                                
+                                currentTime += 0.1; // 0.1秒ずつ進める
+                                
+                                if (currentTime >= maxTime) {
+                                    resetPreview();
+                                    return;
+                                }
+                                
+                                updateDisplay();
+                                animationId = requestAnimationFrame(() => setTimeout(animate, 100)); // 100ms間隔
+                            }
+                            
+                            // スライダーイベント
+                            timeSlider.addEventListener('input', (e) => {
+                                currentTime = parseFloat(e.target.value);
+                                updateDisplay();
+                            });
+                            
+                            // 初期表示
+                            updateDisplay();
+                        </script>
+                    </body>
+                </html>
+            `;
+            
+            return htmlContent;
+        }
+        
+        // 動画生成関数
+        async function generateVideo(format) {
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            const generateBtn = document.getElementById('generateBtn');
+            
+            // UI状態更新
+            progressBar.classList.add('show');
+            generateBtn.disabled = true;
+            generateBtn.textContent = '🎬 生成中...';
+            
+            try {
+                // フォームデータを準備
+                const formData = new FormData();
+                formData.append('mp3File', uploadedFiles.mp3);
+                formData.append('lyricsData', JSON.stringify(lyricsData));
+                formData.append('format', format);
+                
+                if (uploadedFiles.background) {
+                    formData.append('backgroundImage', uploadedFiles.background);
+                }
+                
+                // 動画の長さを計算
+                const maxEndTime = Math.max(...lyricsData.map(item => item.endTime));
+                formData.append('duration', maxEndTime.toString());
+                
+                // プログレスバー開始
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 5;
+                    if (progress <= 90) {
+                        progressFill.style.width = progress + '%';
+                        progressFill.textContent = progress + '%';
+                    }
+                }, 1000);
+                
+                // サーバーに動画生成リクエスト
+                const response = await fetch('/api/generate-video', {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                clearInterval(progressInterval);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // 完了表示
+                    progressFill.style.width = '100%';
+                    progressFill.textContent = '100%';
+                    
+                    setTimeout(() => {
+                        alert('動画生成完了！\nダウンロードを開始します。');
+                        
+                        // ダウンロードリンクを作成
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = result.downloadUrl;
+                        downloadLink.download = `lyrics-${format}-${Date.now()}.mov`;
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+                        
+                        progressBar.classList.remove('show');
+                    }, 1000);
+                } else {
+                    throw new Error(result.error || '動画生成に失敗しました');
+                }
+                
+            } catch (error) {
+                console.error('動画生成エラー:', error);
+                alert('動画生成に失敗しました: ' + error.message);
+                progressBar.classList.remove('show');
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = '🎬 動画生成';
+            }
+        }
+    </script>
+</body>
+</html>
