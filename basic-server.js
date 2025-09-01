@@ -139,6 +139,9 @@ const server = http.createServer((req, res) => {
                     '--prores-profile=4444',
                     `--width=${width}`,
                     `--height=${height}`,
+                    '--fps=60',
+                    '--pixel-format=yuva444p10le',
+                    '--image-format=png',
                     '--timeout=300000'
                 ].join(' ');
                 

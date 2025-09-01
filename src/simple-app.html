@@ -243,13 +243,13 @@
         }
         
         .preview-youtube {
-            width: 960px;
-            height: 540px;
+            width: 1280px;
+            height: 720px;
         }
         
         .preview-vertical {
-            width: 540px;
-            height: 960px;
+            width: 405px;
+            height: 720px;
         }
         
         .preview-lyrics {
@@ -268,8 +268,8 @@
         }
         
         .preview-lyrics.youtube {
-            bottom: 15%;
-            font-size: 48px;
+            bottom: 5%;  /* Final Cut Proと完全一致 */
+            font-size: 28px;  /* Final Cut Proでの実際サイズに合わせる */
         }
         
         .preview-lyrics.vertical {
@@ -602,8 +602,9 @@
                         <div class="font-family-group" style="margin-bottom: 10px;">
                             <label style="font-size: 14px; color: #666;">書体:</label>
                             <select id="fontFamily" class="font-select" style="padding: 5px; border-radius: 4px; border: 1px solid #dadce0;">
+                                <option value="'Shippori Mincho', 'しっぽり明朝', serif" selected>しっぽり明朝</option>
                                 <option value="'Hiragino Sans', 'ヒラギノ角ゴシック', sans-serif">ゴシック体</option>
-                                <option value="'Hiragino Mincho ProN', 'ヒラギノ明朝', serif" selected>明朝体</option>
+                                <option value="'Hiragino Mincho ProN', 'ヒラギノ明朝', serif">明朝体</option>
                                 <option value="'Hiragino Maru Gothic ProN', 'ヒラギノ丸ゴ', sans-serif">丸ゴシック</option>
                                 <option value="'Sawarabi Gothic', sans-serif">さわらびゴシック</option>
                                 <option value="'Noto Sans JP', sans-serif">Noto Sans JP</option>
@@ -615,7 +616,7 @@
                             </select>
                         </div>
                         <div class="font-size-group">
-                            <input type="number" id="fontSize" value="34" min="20" max="120" class="font-input">
+                            <input type="number" id="fontSize" value="32" min="12" max="120" class="font-input">
                             <span>px</span>
                         </div>
                         <div class="color-group">
@@ -627,9 +628,9 @@
                             <input type="color" id="strokeColor" value="#FFFFFF">
                         </div>
                         <div class="stroke-width-group">
-                            <label>縁取り幅: <span id="strokeWidthValue">2</span>px</label>
+                            <label>縁取り幅: <span id="strokeWidthValue">3</span>px</label>
                             <button class="adjust-btn minus" id="strokeWidthMinus" style="padding: 2px 8px;">−</button>
-                            <input type="range" id="strokeWidthSlider" min="0" max="5" step="0.5" value="2" class="slider">
+                            <input type="range" id="strokeWidthSlider" min="0" max="5" step="0.5" value="3" class="slider">
                             <button class="adjust-btn plus" id="strokeWidthPlus" style="padding: 2px 8px;">＋</button>
                         </div>
                         <div class="blur-group" style="margin-top: 10px;">
@@ -698,11 +699,11 @@
             animationStyle: 'fade',
             fadeSpeed: 0.3,
             durationOffset: 0,
-            fontSize: 34,  // 48→34に変更
-            fontFamily: "'Hiragino Mincho ProN', 'ヒラギノ明朝', serif",  // 明朝体に変更
-            fontColor: '#000000',  // 白→黒に変更
-            strokeColor: '#FFFFFF',  // 黒→白に変更
-            strokeWidth: 2,
+            fontSize: 32,  // Final Cut Pro用に調整
+            fontFamily: "'Shippori Mincho', 'しっぽり明朝', serif",  // しっぽり明朝
+            fontColor: '#000000',  // 黒文字
+            strokeColor: '#FFFFFF',  // 白縁取り
+            strokeWidth: 3,  // 縁取りを太めに
             blurType: 'soft',
             blurStrength: 4
         };
@@ -1844,14 +1845,21 @@
                         downloadLink.textContent = '📥 動画をダウンロード';
                         
                         // プログレスバーをダウンロードリンクに置き換え
-                        document.body.replaceChild(downloadLink, progressDiv);
+                        progressDiv.innerHTML = '';
+                        progressDiv.appendChild(downloadLink);
                         
-                        // 5秒後にリンクを削除
-                        setTimeout(() => {
-                            if (document.body.contains(downloadLink)) {
-                                document.body.removeChild(downloadLink);
-                            }
-                        }, 10000);
+                        // ダウンロードリンクをクリックで自動ダウンロード開始
+                        downloadLink.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            const tempLink = document.createElement('a');
+                            tempLink.href = downloadLink.href;
+                            tempLink.download = downloadLink.download;
+                            document.body.appendChild(tempLink);
+                            tempLink.click();
+                            document.body.removeChild(tempLink);
+                        });
+                        
+                        // リンクは削除しない（ユーザーが必要な限り残す）
                         
                     }, 1000);
                 } else {

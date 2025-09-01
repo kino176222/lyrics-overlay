@@ -36,15 +36,15 @@ const DynamicLyricsOverlay: React.FC<DynamicLyricsProps> = ({
   lyricsData = [],
   backgroundImage,
   format = 'youtube',
-  fontFamily = 'Arial, sans-serif',
-  fontSize = 48,
-  fontColor = '#FFFFFF',
-  strokeColor = '#000000',
-  strokeWidth = 2,
+  fontFamily = "'Shippori Mincho', 'しっぽり明朝', serif",
+  fontSize = 32,
+  fontColor = '#000000',
+  strokeColor = '#FFFFFF',
+  strokeWidth = 3,
   position = format === 'youtube' ? 'bottom' : 'center',
   yOffset = 0,
   animationStyle = 'fade',
-  fadeSpeed = 0.3,
+  fadeSpeed = 0.5,  // スムーズなフェードのために値を増やす
   durationOffset = 0,
 }) => {
   // デバッグ用ログ
@@ -142,16 +142,7 @@ const DynamicLyricsOverlay: React.FC<DynamicLyricsProps> = ({
     return {
       opacity: Math.min(fadeIn, fadeOut),
       transform: `scale(${scale})`,
-      translateY: interpolate(
-        frame,
-        [lineStartFrame, lineStartFrame + animationDuration],
-        [20, 0],
-        {
-          extrapolateLeft: 'clamp',
-          extrapolateRight: 'clamp',
-          easing: Easing.out(Easing.cubic),
-        }
-      ),
+      translateY: 0,  // 上下の動きを無効化
     };
   };
 
@@ -201,7 +192,7 @@ const DynamicLyricsOverlay: React.FC<DynamicLyricsProps> = ({
         style={{
           position: 'absolute',
           top: position === 'center' ? '50%' : 'auto',
-          bottom: position === 'bottom' ? '10%' : 'auto',
+          bottom: position === 'bottom' ? '5%' : 'auto',
           left: '50%',
           transform: position === 'center' 
             ? 'translate(-50%, -50%)' 
@@ -240,8 +231,8 @@ export const DynamicLyricsComposition: React.FC = () => {
     <Composition
       id="DynamicLyrics"
       component={DynamicLyricsOverlay}
-      durationInFrames={3000} // 100秒 (30fps)
-      fps={30}
+      durationInFrames={6000} // 100秒 (60fps)
+      fps={60}
       width={1920}
       height={1080}
       defaultProps={{

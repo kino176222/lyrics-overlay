@@ -11,16 +11,16 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="LyricsOverlay"
         component={LyricsOverlay}
-        durationInFrames={7920}
-        fps={30}
+        durationInFrames={15840}
+        fps={60}
         width={1920}
         height={1080}
       />
       <Composition
         id="LyricsWithAudio"
         component={LyricsWithAudio}
-        durationInFrames={7920}
-        fps={30}
+        durationInFrames={15840}
+        fps={60}
         width={1920}
         height={1080}
       />
@@ -29,13 +29,13 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="DynamicLyrics"
         component={DynamicLyricsOverlay}
-        durationInFrames={3000} // 100秒
-        fps={30}
+        durationInFrames={6000} // 100秒 (60fps)
+        fps={60}
         width={1920}
         height={1080}
         calculateMetadata={({ props }) => {
           return {
-            durationInFrames: Math.max(3000, (props.lyricsData?.length || 0) * 150),
+            durationInFrames: Math.max(6000, (props.lyricsData?.length || 0) * 300),
           };
         }}
       />
@@ -45,7 +45,7 @@ export const RemotionRoot: React.FC = () => {
         id="DynamicLyricsVertical"
         component={DynamicLyricsOverlay}
         durationInFrames={3000}
-        fps={30}
+        fps={60}
         width={1080}
         height={1920}
         defaultProps={{
