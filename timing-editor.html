@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>🎵 歌詞タイミングエディター for Final Cut Pro</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        /* Step Sections */
+        .step {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 2px solid #e9ecef;
+        }
+        .step-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        /* Audio Controls */
+        #audioFile {
+            display: none;
+        }
+        .upload-btn {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .upload-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+        audio {
+            width: 100%;
+            margin-top: 15px;
+        }
+        
+        /* Lyrics Input */
+        #lyricsInput {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+        .hint {
+            color: #6c757d;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        /* Timing Section */
+        .lyrics-line {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s;
+        }
+        .lyrics-line.active {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: scale(1.02);
+        }
+        .line-text {
+            flex: 1;
+            font-size: 16px;
+            color: #212529;
+        }
+        .time-input {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .set-current-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .set-current-btn:hover {
+            background: #218838;
+        }
+        
+        /* Export Section */
+        .export-area {
+            display: flex;
+            gap: 15px;
+        }
+        .export-btn {
+            background: #28a745;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .export-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        .copy-btn {
+            background: #17a2b8;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .copy-btn:hover {
+            background: #138496;
+            transform: translateY(-2px);
+        }
+        
+        /* Current Time Display */
+        .current-time {
+            background: #212529;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 24px;
+            font-family: 'Monaco', monospace;
+            text-align: center;
+            margin: 15px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .current-time:hover {
+            background: #495057;
+            transform: scale(1.05);
+        }
+        
+        /* Quick Controls */
+        .quick-controls {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+        .quick-btn {
+            background: #495057;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .quick-btn:hover {
+            background: #6c757d;
+        }
+        
+        /* Keyboard Shortcuts Help */
+        .shortcuts-help {
+            background: #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #495057;
+        }
+        .shortcut {
+            display: inline-block;
+            background: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin: 0 2px;
+            font-family: monospace;
+        }
+        
+        /* Success Message */
+        .success-message {
+            display: none;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 歌詞タイミングエディター</h1>
+        <p class="subtitle">Final Cut Pro用の透明背景付き歌詞動画を作成</p>
+        
+        <!-- Step 1: Audio Upload -->
+        <div class="step">
+            <div class="step-title">
+                <span class="step-number">1</span>
+                MP3ファイルをアップロード
+            </div>
+            <input type="file" id="audioFile" accept="audio/*">
+            <button class="upload-btn" onclick="document.getElementById('audioFile').click()">
+                📁 音楽ファイルを選択
+            </button>
+            <audio id="audioPlayer" controls style="display: none;"></audio>
+            <div class="current-time" id="currentTime" style="display: none;" onclick="togglePlayPause()">00:00.0</div>
+            <div class="quick-controls" id="quickControls" style="display: none;">
+                <button class="quick-btn" onclick="seekRelative(-5)">⏪ -5秒</button>
+                <button class="quick-btn" onclick="seekRelative(-1)">⏴ -1秒</button>
+                <button class="quick-btn" onclick="seekRelative(-0.1)">◂ -0.1秒</button>
+                <button class="quick-btn" onclick="togglePlayPause()">⏯ 再生/停止</button>
+                <button class="quick-btn" onclick="seekRelative(0.1)">▸ +0.1秒</button>
+                <button class="quick-btn" onclick="seekRelative(1)">⏵ +1秒</button>
+                <button class="quick-btn" onclick="seekRelative(5)">⏩ +5秒</button>
+            </div>
+            <div class="shortcuts-help" id="shortcutsHelp" style="display: none;">
+                <strong>🎹 キーボードショートカット:</strong><br>
+                <span class="shortcut">Space</span> 再生/停止 
+                <span class="shortcut">←→</span> ±0.1秒 
+                <span class="shortcut">Shift+←→</span> ±1秒 
+                <span class="shortcut">Ctrl+←→</span> ±5秒
+            </div>
+        </div>
+        
+        <!-- Step 2: Lyrics Input -->
+        <div class="step">
+            <div class="step-title">
+                <span class="step-number">2</span>
+                歌詞を入力（1行ずつ）
+            </div>
+            <textarea id="lyricsInput" placeholder="君の笑顔が好きなんだ
+この瞬間を忘れないで
+時が過ぎても変わらずに
+心の中で歌い続ける"></textarea>
+            <p class="hint">💡 1行に1フレーズずつ入力してください</p>
+            <button class="upload-btn" onclick="processLyrics()" style="margin-top: 10px;">
+                ✨ タイミング設定へ進む
+            </button>
+        </div>
+        
+        <!-- Step 3: Timing Adjustment -->
+        <div class="step" id="timingSection" style="display: none;">
+            <div class="step-title">
+                <span class="step-number">3</span>
+                タイミング調整
+            </div>
+            <p class="hint">🎧 音楽を再生しながら、各歌詞の開始・終了時間を設定してください</p>
+            <div id="lyricsLines"></div>
+        </div>
+        
+        <!-- Step 3.5: Style Settings -->
+        <div class="step" id="styleSection" style="display: none;">
+            <div class="step-title">
+                <span class="step-number">3.5</span>
+                フォントとエフェクト設定
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label>フォントサイズ</label>
+                    <input type="range" id="fontSize" min="24" max="120" value="48" 
+                           oninput="updatePreview()" style="width: 100%; margin: 10px 0;">
+                    <span id="fontSizeValue">48px</span>
+                </div>
+                <div>
+                    <label>縁取りの太さ</label>
+                    <input type="range" id="strokeWidth" min="0" max="8" value="2" 
+                           oninput="updatePreview()" style="width: 100%; margin: 10px 0;">
+                    <span id="strokeWidthValue">2px</span>
+                </div>
+                <div>
+                    <label>文字の色</label>
+                    <input type="color" id="fontColor" value="#FFFFFF" 
+                           onchange="updatePreview()" style="width: 100%; height: 40px; margin: 10px 0;">
+                </div>
+                <div>
+                    <label>縁取りの色</label>
+                    <input type="color" id="strokeColor" value="#000000" 
+                           onchange="updatePreview()" style="width: 100%; height: 40px; margin: 10px 0;">
+                </div>
+                <div>
+                    <label>位置</label>
+                    <select id="position" onchange="updatePreview()" style="width: 100%; padding: 10px; margin: 10px 0;">
+                        <option value="bottom">下部</option>
+                        <option value="center">中央</option>
+                        <option value="top">上部</option>
+                    </select>
+                </div>
+                <div>
+                    <label>フォント</label>
+                    <select id="fontFamily" onchange="updatePreview()" style="width: 100%; padding: 10px; margin: 10px 0;">
+                        <option value="'Hiragino Sans', 'Yu Gothic', sans-serif">ヒラギノ角ゴ</option>
+                        <option value="'Shippori Mincho', 'Yu Mincho', serif">しっぽり明朝</option>
+                        <option value="'Helvetica Neue', Arial, sans-serif">Helvetica</option>
+                        <option value="'Impact', 'Arial Black', sans-serif">Impact</option>
+                    </select>
+                </div>
+            </div>
+            <div style="background: #000; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+                <div id="stylePreview" style="font-size: 48px; color: #FFFFFF; text-shadow: 0 0 2px #000000; font-family: 'Hiragino Sans', sans-serif;">
+                    プレビューテキスト
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step 4: Export -->
+        <div class="step" id="exportSection" style="display: none;">
+            <div class="step-title">
+                <span class="step-number">4</span>
+                書き出し
+            </div>
+            <div class="export-area">
+                <button class="export-btn" onclick="exportToJSON()">
+                    💾 JSONファイルを保存
+                </button>
+                <button class="copy-btn" onclick="copyToClipboard()">
+                    📋 クリップボードにコピー
+                </button>
+            </div>
+            <div class="success-message" id="successMessage">
+                ✅ コピーしました！src/lyrics-data.json に貼り付けてください
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let audioPlayer;
+        let lyricsData = [];
+        let currentTimeInterval;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            audioPlayer = document.getElementById('audioPlayer');
+            
+            // Audio file upload
+            document.getElementById('audioFile').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const url = URL.createObjectURL(file);
+                    audioPlayer.src = url;
+                    audioPlayer.style.display = 'block';
+                    document.getElementById('currentTime').style.display = 'block';
+                    
+                    // Update current time display
+                    audioPlayer.addEventListener('timeupdate', updateTimeDisplay);
+                    document.getElementById('quickControls').style.display = 'flex';
+                    document.getElementById('shortcutsHelp').style.display = 'block';
+                    
+                    // キーボードショートカットを有効化
+                    setupKeyboardShortcuts();
+                }
+            });
+        });
+        
+        function updateTimeDisplay() {
+            const time = audioPlayer.currentTime;
+            const minutes = Math.floor(time / 60);
+            const seconds = (time % 60).toFixed(1);
+            document.getElementById('currentTime').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.padStart(4, '0')}`;
+            
+            // Highlight active lyrics
+            lyricsData.forEach((line, index) => {
+                const element = document.querySelector(`#line-${index}`);
+                if (element) {
+                    if (time >= line.startTime && time <= line.endTime) {
+                        element.classList.add('active');
+                    } else {
+                        element.classList.remove('active');
+                    }
+                }
+            });
+        }
+        
+        function processLyrics() {
+            const text = document.getElementById('lyricsInput').value.trim();
+            if (!text) {
+                alert('歌詞を入力してください');
+                return;
+            }
+            
+            const lines = text.split('\n').filter(line => line.trim());
+            lyricsData = lines.map((text, index) => ({
+                text: text.trim(),
+                startTime: index * 3,
+                endTime: (index + 1) * 3
+            }));
+            
+            displayTimingControls();
+            document.getElementById('timingSection').style.display = 'block';
+            document.getElementById('styleSection').style.display = 'block';
+            document.getElementById('exportSection').style.display = 'block';
+            updatePreview();
+        }
+        
+        function displayTimingControls() {
+            const container = document.getElementById('lyricsLines');
+            container.innerHTML = '';
+            
+            lyricsData.forEach((line, index) => {
+                const div = document.createElement('div');
+                div.className = 'lyrics-line';
+                div.id = `line-${index}`;
+                div.innerHTML = `
+                    <span class="line-text">${line.text}</span>
+                    <input type="number" 
+                           class="time-input" 
+                           id="start-${index}" 
+                           value="${line.startTime}" 
+                           step="0.1"
+                           onchange="updateTime(${index}, 'start', this.value)">
+                    <span>→</span>
+                    <input type="number" 
+                           class="time-input" 
+                           id="end-${index}" 
+                           value="${line.endTime}" 
+                           step="0.1"
+                           onchange="updateTime(${index}, 'end', this.value)">
+                    <button class="set-current-btn" onclick="setCurrentTime(${index}, 'start')" title="キー: S">
+                        📍 開始
+                    </button>
+                    <button class="set-current-btn" onclick="setCurrentTime(${index}, 'end')" title="キー: E">
+                        🏁 終了
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+        
+        function updateTime(index, type, value) {
+            if (type === 'start') {
+                lyricsData[index].startTime = parseFloat(value);
+            } else {
+                lyricsData[index].endTime = parseFloat(value);
+            }
+        }
+        
+        function setCurrentTime(index, type) {
+            const currentTime = audioPlayer.currentTime;
+            if (type === 'start') {
+                lyricsData[index].startTime = currentTime;
+                document.getElementById(`start-${index}`).value = currentTime.toFixed(1);
+            } else {
+                lyricsData[index].endTime = currentTime;
+                document.getElementById(`end-${index}`).value = currentTime.toFixed(1);
+            }
+        }
+        
+        function updatePreview() {
+            const fontSize = document.getElementById('fontSize').value;
+            const fontColor = document.getElementById('fontColor').value;
+            const strokeColor = document.getElementById('strokeColor').value;
+            const strokeWidth = document.getElementById('strokeWidth').value;
+            const fontFamily = document.getElementById('fontFamily').value;
+            
+            // Update value displays
+            document.getElementById('fontSizeValue').textContent = fontSize + 'px';
+            document.getElementById('strokeWidthValue').textContent = strokeWidth + 'px';
+            
+            // Update preview
+            const preview = document.getElementById('stylePreview');
+            preview.style.fontSize = fontSize + 'px';
+            preview.style.color = fontColor;
+            preview.style.textShadow = `0 0 ${strokeWidth}px ${strokeColor}`;
+            preview.style.fontFamily = fontFamily;
+        }
+        
+        function getStyleSettings() {
+            return {
+                fontSize: parseInt(document.getElementById('fontSize').value),
+                fontColor: document.getElementById('fontColor').value,
+                strokeColor: document.getElementById('strokeColor').value,
+                strokeWidth: parseInt(document.getElementById('strokeWidth').value),
+                position: document.getElementById('position').value,
+                fontFamily: document.getElementById('fontFamily').value
+            };
+        }
+        
+        function exportToJSON() {
+            const data = {
+                lyrics: lyricsData,
+                style: getStyleSettings()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'lyrics-data.json';
+            a.click();
+            
+            alert('✅ ダウンロードしました！\nこのファイルを src/lyrics-data.json に置き換えてください');
+        }
+        
+        function copyToClipboard() {
+            const data = {
+                lyrics: lyricsData,
+                style: getStyleSettings()
+            };
+            
+            navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
+                document.getElementById('successMessage').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('successMessage').style.display = 'none';
+                }, 3000);
+            });
+        }
+        
+        // 追加機能
+        function togglePlayPause() {
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+            } else {
+                audioPlayer.pause();
+            }
+        }
+        
+        function seekRelative(seconds) {
+            audioPlayer.currentTime = Math.max(0, Math.min(audioPlayer.duration || 0, audioPlayer.currentTime + seconds));
+        }
+        
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                // 入力フィールドにフォーカスがある場合は無視
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                    return;
+                }
+                
+                switch(e.code) {
+                    case 'Space':
+                        e.preventDefault();
+                        togglePlayPause();
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        if (e.ctrlKey) {
+                            seekRelative(-5);
+                        } else if (e.shiftKey) {
+                            seekRelative(-1);
+                        } else {
+                            seekRelative(-0.1);
+                        }
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        if (e.ctrlKey) {
+                            seekRelative(5);
+                        } else if (e.shiftKey) {
+                            seekRelative(1);
+                        } else {
+                            seekRelative(0.1);
+                        }
+                        break;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

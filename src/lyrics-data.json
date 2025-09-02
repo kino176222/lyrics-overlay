@@ -1,0 +1,127 @@
+{
+  "lyrics": [
+    {
+      "text": "思考のスピードに 追いつけなくて",
+      "startTime": 0.8,
+      "endTime": 3
+    },
+    {
+      "text": "守りたいものが 増えていくのに",
+      "startTime": 3,
+      "endTime": 6
+    },
+    {
+      "text": "逆再生できない時間に、しびれてる",
+      "startTime": 6,
+      "endTime": 9
+    },
+    {
+      "text": "もう会えないあの人のこと",
+      "startTime": 9,
+      "endTime": 12
+    },
+    {
+      "text": "変わってく君との距離",
+      "startTime": 12,
+      "endTime": 15
+    },
+    {
+      "text": "通じ合えない心に、しびれてる",
+      "startTime": 15,
+      "endTime": 18
+    },
+    {
+      "text": "ああ、しびれてる 無限の可能性に",
+      "startTime": 18,
+      "endTime": 21
+    },
+    {
+      "text": "ああ、しびれてる 終わりがあることにも",
+      "startTime": 21,
+      "endTime": 24
+    },
+    {
+      "text": "どうしようもなく、ありがたいことで世界は溢れてる",
+      "startTime": 24,
+      "endTime": 27
+    },
+    {
+      "text": "この感覚が、そう、生きてる証拠なんだ！",
+      "startTime": 27,
+      "endTime": 30
+    },
+    {
+      "text": "やりたいことが多すぎて",
+      "startTime": 30,
+      "endTime": 33
+    },
+    {
+      "text": "未来の足音が 速すぎて",
+      "startTime": 33,
+      "endTime": 36
+    },
+    {
+      "text": "自分勝手な裸の王様に、しびれてる",
+      "startTime": 36,
+      "endTime": 39
+    },
+    {
+      "text": "他人に興味がないくせに",
+      "startTime": 39,
+      "endTime": 42
+    },
+    {
+      "text": "何かを伝えたがってる",
+      "startTime": 42,
+      "endTime": 45
+    },
+    {
+      "text": "この矛盾こそが僕だって、もう笑えてくる",
+      "startTime": 45,
+      "endTime": 48
+    },
+    {
+      "text": "ああ、しびれてる 無限の可能性に",
+      "startTime": 48,
+      "endTime": 51
+    },
+    {
+      "text": "ああ、しびれてる 終わりがあることにも",
+      "startTime": 51,
+      "endTime": 54
+    },
+    {
+      "text": "どうしようもなく、ありがたいことで世界は溢れてる",
+      "startTime": 54,
+      "endTime": 57
+    },
+    {
+      "text": "この感覚が、そう、生きてる証拠なんだ！",
+      "startTime": 57,
+      "endTime": 60
+    },
+    {
+      "text": "結局、何にも知らないけど",
+      "startTime": 60,
+      "endTime": 63
+    },
+    {
+      "text": "「やってやるぞ」って声がする",
+      "startTime": 63,
+      "endTime": 66
+    },
+    {
+      "text": "しびれてる… ああ、僕はいま、生きてる。",
+      "startTime": 66,
+      "endTime": 69
+    }
+  ],
+  "style": {
+    "fontSize": 31,
+    "fontColor": "#ffffff",
+    "strokeColor": "#000000",
+    "strokeWidth": 1,
+    "position": "bottom",
+    "fontFamily": "'Shippori Mincho', 'Yu Mincho', serif"
+  }
+}
