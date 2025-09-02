@@ -41,6 +41,8 @@ logs
 
 # Remotion specific
 out/
+output/
 *.mp4
 *.webm
 *.gif
+*.mov
