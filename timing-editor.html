@@ -300,14 +300,67 @@
             </button>
         </div>
         
-        <!-- Step 3: Timing Adjustment -->
+        <!-- Step 3: カラオケ風タイミング調整 -->
         <div class="step" id="timingSection" style="display: none;">
             <div class="step-title">
                 <span class="step-number">3</span>
-                タイミング調整
+                🎤 カラオケ風タイミング調整
             </div>
-            <p class="hint">🎧 音楽を再生しながら、各歌詞の開始・終了時間を設定してください</p>
-            <div id="lyricsLines"></div>
+            
+            <!-- プレイヤーコントロール -->
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 15px 0;">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                    <button id="karaokePlay" onclick="toggleKaraokePlay()" style="background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-size: 16px; font-weight: 600;">
+                        ▶️ 再生
+                    </button>
+                    <button onclick="seekToStart()" style="background: #6c757d; color: white; border: none; padding: 10px 15px; border-radius: 6px;">
+                        ⏮️ 最初から
+                    </button>
+                    <button onclick="replayCurrentLine()" style="background: #17a2b8; color: white; border: none; padding: 10px 15px; border-radius: 6px;">
+                        🔄 現在行をリピート
+                    </button>
+                </div>
+                <div style="font-size: 24px; font-weight: bold; color: #495057; font-family: monospace;">
+                    ⏱️ <span id="karaokeTime">00:00.0</span>
+                </div>
+            </div>
+            
+            <!-- 現在設定中の歌詞 -->
+            <div id="currentLineSection" style="background: #e3f2fd; border: 3px solid #2196f3; padding: 20px; border-radius: 8px; margin: 15px 0;">
+                <div style="font-size: 14px; color: #1976d2; margin-bottom: 10px;">
+                    📝 設定中: <span id="currentLineNumber">1</span>/<span id="totalLines">0</span>行目
+                </div>
+                <div id="currentLineText" style="font-size: 20px; font-weight: bold; color: #0d47a1; margin-bottom: 15px;">
+                    設定する歌詞がここに表示されます
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button onclick="setCurrentStart()" style="background: #4caf50; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-size: 16px; font-weight: 600;">
+                        🎯 開始をここに設定
+                    </button>
+                    <button onclick="setCurrentEnd()" style="background: #ff9800; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-size: 16px; font-weight: 600;">
+                        ⏹️ 終了をここに設定
+                    </button>
+                    <button onclick="nextLine()" style="background: #2196f3; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-size: 16px; font-weight: 600;">
+                        ⏭️ 次の行へ
+                    </button>
+                    <button onclick="prevLine()" style="background: #6c757d; color: white; border: none; padding: 10px 15px; border-radius: 6px;">
+                        ⏮️ 前の行へ
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 進捗表示 -->
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                <div style="font-size: 14px; color: #6c757d; margin-bottom: 10px;">📊 進捗状況</div>
+                <div style="font-size: 12px; color: #6c757d; margin-bottom: 10px;">💡 行をクリック→編集モード切り替え＋再生開始</div>
+                <div id="lyricsProgress"></div>
+            </div>
+            
+            <!-- 従来の詳細調整（折りたたみ式） -->
+            <details style="margin-top: 20px;">
+                <summary style="cursor: pointer; padding: 10px; background: #e9ecef; border-radius: 6px; font-weight: 600;">🔧 詳細調整（上級者用）</summary>
+                <div id="lyricsLines" style="margin-top: 15px;"></div>
+            </details>
         </div>
         
         <!-- Step 3.5: Style Settings -->
@@ -424,14 +477,21 @@
             const time = audioPlayer.currentTime;
             const minutes = Math.floor(time / 60);
             const seconds = (time % 60).toFixed(1);
-            document.getElementById('currentTime').textContent = 
-                `${minutes.toString().padStart(2, '0')}:${seconds.padStart(4, '0')}`;
             
-            // Highlight active lyrics
+            // 両方のタイム表示を更新
+            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.padStart(4, '0')}`;
+            document.getElementById('currentTime').textContent = timeString;
+            
+            const karaokeTimeElement = document.getElementById('karaokeTime');
+            if (karaokeTimeElement) {
+                karaokeTimeElement.textContent = timeString;
+            }
+            
+            // Highlight active lyrics in detailed view
             lyricsData.forEach((line, index) => {
                 const element = document.querySelector(`#line-${index}`);
                 if (element) {
-                    if (time >= line.startTime && time <= line.endTime) {
+                    if (line.isSet && time >= line.startTime && time <= line.endTime) {
                         element.classList.add('active');
                     } else {
                         element.classList.remove('active');
@@ -450,10 +510,13 @@
             const lines = text.split('\n').filter(line => line.trim());
             lyricsData = lines.map((text, index) => ({
                 text: text.trim(),
-                startTime: index * 3,
-                endTime: (index + 1) * 3
+                startTime: 0,
+                endTime: 0,
+                isSet: false
             }));
             
+            currentEditingLine = 0;
+            setupKaraokeInterface();
             displayTimingControls();
             document.getElementById('timingSection').style.display = 'block';
             document.getElementById('styleSection').style.display = 'block';
@@ -501,6 +564,15 @@
             } else {
                 lyricsData[index].endTime = parseFloat(value);
             }
+            lyricsData[index].isSet = true;
+            updateProgressDisplay();
+        }
+        
+        function updateTimingDisplay(index) {
+            const startInput = document.getElementById(`start-${index}`);
+            const endInput = document.getElementById(`end-${index}`);
+            if (startInput) startInput.value = lyricsData[index].startTime.toFixed(1);
+            if (endInput) endInput.value = lyricsData[index].endTime.toFixed(1);
         }
         
         function setCurrentTime(index, type) {
@@ -515,6 +587,8 @@
         }
         
         let currentYOffset = 0;
+        let currentEditingLine = 0;
+        let karaokeMode = false;
         
         function updatePreview() {
             const fontSize = document.getElementById('fontSize').value;
@@ -600,6 +674,220 @@
                     document.getElementById('successMessage').style.display = 'none';
                 }, 3000);
             });
+        }
+        
+        // カラオケモード用の関数
+        function setupKaraokeInterface() {
+            document.getElementById('totalLines').textContent = lyricsData.length;
+            updateCurrentLine();
+            updateProgressDisplay();
+        }
+        
+        function updateCurrentLine() {
+            if (lyricsData.length === 0) return;
+            
+            const currentLine = lyricsData[currentEditingLine];
+            document.getElementById('currentLineNumber').textContent = currentEditingLine + 1;
+            document.getElementById('currentLineText').textContent = currentLine.text;
+            
+            // プレビューテキストも更新
+            document.getElementById('stylePreview').textContent = currentLine.text;
+        }
+        
+        function updateProgressDisplay() {
+            const container = document.getElementById('lyricsProgress');
+            container.innerHTML = '';
+            
+            lyricsData.forEach((line, index) => {
+                const div = document.createElement('div');
+                div.style.cssText = `
+                    padding: 8px 12px;
+                    margin: 3px 0;
+                    border-radius: 6px;
+                    font-size: 14px;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                `;
+                
+                const textDiv = document.createElement('div');
+                textDiv.style.flex = '1';
+                
+                const buttonDiv = document.createElement('div');
+                buttonDiv.style.cssText = 'display: flex; gap: 5px; margin-left: 10px;';
+                
+                if (index === currentEditingLine) {
+                    div.style.cssText += `
+                        background: #2196f3;
+                        color: white;
+                        font-weight: bold;
+                        border: 2px solid #1976d2;
+                    `;
+                    textDiv.innerHTML = `<strong>${index + 1}.</strong> ${line.text} 📝 設定中`;
+                } else if (line.isSet) {
+                    div.style.cssText += `
+                        background: #4caf50;
+                        color: white;
+                    `;
+                    textDiv.innerHTML = `<strong>${index + 1}.</strong> ${line.text} ✅ (${line.startTime.toFixed(1)}s - ${line.endTime.toFixed(1)}s)`;
+                    
+                    // 🎧ボタン（区間リピート）
+                    const replayBtn = document.createElement('button');
+                    replayBtn.innerHTML = '🎧';
+                    replayBtn.style.cssText = 'background: rgba(255,255,255,0.2); border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; color: white;';
+                    replayBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        playSection(index);
+                    };
+                    replayBtn.title = 'この区間をリピート再生';
+                    buttonDiv.appendChild(replayBtn);
+                } else {
+                    div.style.cssText += `
+                        background: #e9ecef;
+                        color: #6c757d;
+                    `;
+                    textDiv.innerHTML = `<strong>${index + 1}.</strong> ${line.text} ⏳ 未設定`;
+                    
+                    // ▶️ボタン（その位置から再生）
+                    const playBtn = document.createElement('button');
+                    playBtn.innerHTML = '▶️';
+                    playBtn.style.cssText = 'background: rgba(0,0,0,0.1); border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;';
+                    playBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        playFromEstimated(index);
+                    };
+                    playBtn.title = '推定位置から再生';
+                    buttonDiv.appendChild(playBtn);
+                }
+                
+                div.appendChild(textDiv);
+                div.appendChild(buttonDiv);
+                
+                // 行クリックで編集モードに切り替え
+                div.onclick = () => jumpToLineAndPlay(index);
+                
+                container.appendChild(div);
+            });
+        }
+        
+        function toggleKaraokePlay() {
+            const btn = document.getElementById('karaokePlay');
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                btn.textContent = '⏸️ 停止';
+                btn.style.background = '#dc3545';
+                karaokeMode = true;
+            } else {
+                audioPlayer.pause();
+                btn.textContent = '▶️ 再生';
+                btn.style.background = '#28a745';
+                karaokeMode = false;
+            }
+        }
+        
+        function setCurrentStart() {
+            if (currentEditingLine < lyricsData.length) {
+                lyricsData[currentEditingLine].startTime = audioPlayer.currentTime;
+                updateProgressDisplay();
+                updateTimingDisplay(currentEditingLine);
+            }
+        }
+        
+        function setCurrentEnd() {
+            if (currentEditingLine < lyricsData.length) {
+                const line = lyricsData[currentEditingLine];
+                line.endTime = audioPlayer.currentTime;
+                line.isSet = true;
+                updateProgressDisplay();
+                updateTimingDisplay(currentEditingLine);
+            }
+        }
+        
+        function nextLine() {
+            if (currentEditingLine < lyricsData.length - 1) {
+                currentEditingLine++;
+                updateCurrentLine();
+                updateProgressDisplay();
+            }
+        }
+        
+        function prevLine() {
+            if (currentEditingLine > 0) {
+                currentEditingLine--;
+                updateCurrentLine();
+                updateProgressDisplay();
+            }
+        }
+        
+        function jumpToLineAndPlay(index) {
+            currentEditingLine = index;
+            updateCurrentLine();
+            updateProgressDisplay();
+            
+            // その行の開始時間から再生（設定済みの場合）
+            if (lyricsData[index].isSet && lyricsData[index].startTime >= 0) {
+                audioPlayer.currentTime = lyricsData[index].startTime;
+                if (audioPlayer.paused) {
+                    audioPlayer.play();
+                    document.getElementById('karaokePlay').textContent = '⏸️ 停止';
+                    document.getElementById('karaokePlay').style.background = '#dc3545';
+                }
+            } else {
+                // 未設定の場合は推定位置から再生
+                playFromEstimated(index);
+            }
+        }
+        
+        function playSection(index) {
+            const line = lyricsData[index];
+            if (!line.isSet) return;
+            
+            audioPlayer.currentTime = line.startTime;
+            audioPlayer.play();
+            
+            // 終了時間で自動停止
+            const checkEnd = setInterval(() => {
+                if (audioPlayer.currentTime >= line.endTime) {
+                    audioPlayer.pause();
+                    clearInterval(checkEnd);
+                    // 少し戻して再開準備
+                    audioPlayer.currentTime = line.startTime;
+                }
+            }, 100);
+            
+            // 5秒後に自動的にクリア（安全装置）
+            setTimeout(() => clearInterval(checkEnd), 5000);
+        }
+        
+        function playFromEstimated(index) {
+            // 推定時間を計算（前の行の終了時間 or インデックス * 3秒）
+            let estimatedTime = 0;
+            if (index > 0) {
+                const prevLine = lyricsData[index - 1];
+                estimatedTime = prevLine.isSet ? prevLine.endTime : index * 3;
+            }
+            
+            audioPlayer.currentTime = estimatedTime;
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                document.getElementById('karaokePlay').textContent = '⏸️ 停止';
+                document.getElementById('karaokePlay').style.background = '#dc3545';
+            }
+        }
+        
+        function seekToStart() {
+            audioPlayer.currentTime = 0;
+        }
+        
+        function replayCurrentLine() {
+            const line = lyricsData[currentEditingLine];
+            if (line.isSet && line.startTime > 0) {
+                audioPlayer.currentTime = line.startTime;
+            } else {
+                audioPlayer.currentTime = Math.max(0, audioPlayer.currentTime - 5);
+            }
         }
         
         // 追加機能
