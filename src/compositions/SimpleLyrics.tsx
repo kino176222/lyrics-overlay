@@ -1,11 +1,12 @@
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate } from 'remotion';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, getRemotionEnvironment } from 'remotion';
 import lyricsData from '../lyrics-data.json';
 
 export const SimpleLyrics: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const currentTime = frame / fps;
+  const isRendering = getRemotionEnvironment().isRendering;
 
   // 現在表示すべき歌詞を探す
   const currentLyric = lyricsData.lyrics.find(
@@ -39,6 +40,12 @@ export const SimpleLyrics: React.FC = () => {
     }
   };
 
+  // Y軸オフセットを適用
+  const getTransform = () => {
+    const yOffset = lyricsData.style.yOffset || 0;
+    return `translateY(${yOffset}px)`;
+  };
+
   return (
     <AbsoluteFill style={{
       backgroundColor: 'transparent',
@@ -46,54 +53,7 @@ export const SimpleLyrics: React.FC = () => {
       alignItems: 'center',
       padding: getPadding()
     }}>
-      {/* プレビュー用のガイドライン */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        pointerEvents: 'none',
-        border: '2px dashed rgba(255,255,255,0.3)',
-        background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.1) 100%)'
-      }}>
-        {/* セーフエリアガイド */}
-        <div style={{
-          position: 'absolute',
-          top: '10%',
-          left: '5%',
-          right: '5%',
-          bottom: '10%',
-          border: '1px dashed rgba(255,255,255,0.2)'
-        }} />
-        
-        {/* 中央線 */}
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: 0,
-          right: 0,
-          height: '1px',
-          backgroundColor: 'rgba(255,255,255,0.3)'
-        }} />
-        
-        {/* 位置表示 */}
-        <div style={{
-          position: 'absolute',
-          top: '10px',
-          left: '10px',
-          color: 'rgba(255,255,255,0.7)',
-          fontSize: '12px',
-          fontFamily: 'monospace',
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          padding: '4px 8px',
-          borderRadius: '4px'
-        }}>
-          位置: {lyricsData.style.position} | サイズ: {lyricsData.style.fontSize}px
-        </div>
-      </div>
-
-      {/* 歌詞テキスト */}
+      {/* 歌詞テキストのみ - ガイドなし */}
       <div style={{
         fontSize: lyricsData.style.fontSize,
         color: lyricsData.style.fontColor,
@@ -103,8 +63,8 @@ export const SimpleLyrics: React.FC = () => {
         textShadow: `0 0 ${lyricsData.style.strokeWidth}px ${lyricsData.style.strokeColor}`,
         opacity,
         padding: '0 50px',
-        zIndex: 10,
-        position: 'relative'
+        transform: getTransform(),
+        transition: 'transform 0.3s ease'
       }}>
         {currentLyric.text}
       </div>

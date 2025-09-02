@@ -2,7 +2,7 @@
   "lyrics": [
     {
       "text": "思考のスピードに 追いつけなくて",
-      "startTime": 0.8,
+      "startTime": 0,
       "endTime": 3
     },
     {
@@ -117,11 +117,12 @@
     }
   ],
   "style": {
-    "fontSize": 31,
+    "fontSize": 35,
     "fontColor": "#ffffff",
     "strokeColor": "#000000",
-    "strokeWidth": 1,
-    "position": "bottom",
-    "fontFamily": "'Shippori Mincho', 'Yu Mincho', serif"
+    "strokeWidth": 2,
+    "position": "center",
+    "fontFamily": "'Hiragino Sans', 'Yu Gothic', sans-serif",
+    "yOffset": -15
   }
 }
