@@ -333,6 +333,24 @@
                 <div id="currentLineText" style="font-size: 20px; font-weight: bold; color: #0d47a1; margin-bottom: 15px;">
                     設定する歌詞がここに表示されます
                 </div>
+                <!-- 自動連携設定 -->
+                <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
+                    <div style="display: flex; align-items: center; gap: 15px; font-size: 14px;">
+                        <label style="display: flex; align-items: center; gap: 5px; font-weight: 600;">
+                            <input type="checkbox" id="autoLinkMode" checked onchange="updateAutoLinkDisplay()">
+                            🔗 自動連携モード
+                        </label>
+                        <span>終了時間設定時、自動で次行の開始時間にセット（</span>
+                        <select id="autoLinkGap" onchange="updateAutoLinkDisplay()" style="padding: 2px 5px; border: 1px solid #ccc; border-radius: 3px;">
+                            <option value="0.0">⚡ 即座 (0.0秒)</option>
+                            <option value="0.1" selected>🎵 標準 (0.1秒)</option>
+                            <option value="0.2">📝 余裕 (0.2秒)</option>
+                            <option value="0.5">🎭 演劇風 (0.5秒)</option>
+                        </select>
+                        <span>後）</span>
+                    </div>
+                </div>
+                
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button onclick="setCurrentStart()" style="background: #4caf50; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-size: 16px; font-weight: 600;">
                         🎯 開始をここに設定
@@ -802,6 +820,23 @@
                 line.isSet = true;
                 updateProgressDisplay();
                 updateTimingDisplay(currentEditingLine);
+                
+                // 自動連携機能
+                const autoLinkMode = document.getElementById('autoLinkMode').checked;
+                const autoLinkGap = parseFloat(document.getElementById('autoLinkGap').value);
+                
+                if (autoLinkMode && currentEditingLine < lyricsData.length - 1) {
+                    const nextLine = lyricsData[currentEditingLine + 1];
+                    nextLine.startTime = line.endTime + autoLinkGap;
+                    updateTimingDisplay(currentEditingLine + 1);
+                    
+                    // 自動的に次の行に移動
+                    setTimeout(() => {
+                        nextLine();
+                        // ヒント表示
+                        showAutoLinkHint();
+                    }, 100);
+                }
             }
         }
         
@@ -938,6 +973,43 @@
                 }
             });
         }
+        
+        // 自動連携のヘルパー関数
+        function updateAutoLinkDisplay() {
+            const autoLinkMode = document.getElementById('autoLinkMode').checked;
+            const gapSelect = document.getElementById('autoLinkGap');
+            gapSelect.disabled = !autoLinkMode;
+            gapSelect.style.opacity = autoLinkMode ? '1' : '0.5';
+        }
+        
+        function showAutoLinkHint() {
+            // 一時的なヒント表示（オプション）
+            const hintElement = document.createElement('div');
+            hintElement.textContent = '🔗 次行の開始時間を自動設定しました';
+            hintElement.style.cssText = `
+                position: fixed; top: 20px; right: 20px; 
+                background: #28a745; color: white; 
+                padding: 10px 15px; border-radius: 5px; 
+                font-size: 14px; font-weight: 600;
+                z-index: 1000; animation: fadeInOut 2s ease-in-out;
+            `;
+            document.body.appendChild(hintElement);
+            setTimeout(() => hintElement.remove(), 2000);
+        }
+        
+        // 初期化時に自動連携表示を更新
+        document.addEventListener('DOMContentLoaded', () => {
+            updateAutoLinkDisplay();
+        });
     </script>
+    
+    <style>
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(20px); }
+            20% { opacity: 1; transform: translateX(0); }
+            80% { opacity: 1; transform: translateX(0); }
+            100% { opacity: 0; transform: translateX(-20px); }
+        }
+    </style>
 </body>
 </html>

@@ -2,150 +2,174 @@
   "lyrics": [
     {
       "text": "思考のスピードに 追いつけなくて",
-      "startTime": 0,
-      "endTime": 6.909008,
+      "startTime": 0.018253,
+      "endTime": 5.507491,
       "isSet": true
     },
     {
       "text": "守りたいものが 増えていくのに",
-      "startTime": 11.642985,
-      "endTime": 15.923427,
+      "startTime": 5.607491,
+      "endTime": 12.265839,
       "isSet": true
     },
     {
-      "text": "逆再生できない時間に、しびれてる",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "text": "逆再生できない時間に",
+      "startTime": 12.365839,
+      "endTime": 19.508076,
+      "isSet": true
+    },
+    {
+      "text": "しびれてる",
+      "startTime": 19.608076,
+      "endTime": 24.621871,
+      "isSet": true
     },
     {
       "text": "もう会えないあの人のこと",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "startTime": 24.721871,
+      "endTime": 30.788851,
+      "isSet": true
     },
     {
       "text": "変わってく君との距離",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "startTime": 30.888851000000003,
+      "endTime": 36.699696,
+      "isSet": true
     },
     {
-      "text": "通じ合えない心に、しびれてる",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "text": "通じ合えない心に",
+      "startTime": 36.799696000000004,
+      "endTime": 42.154412,
+      "isSet": true
+    },
+    {
+      "text": "しびれてる",
+      "startTime": 42.254412,
+      "endTime": 47.766711,
+      "isSet": true
     },
     {
       "text": "ああ、しびれてる 無限の可能性に",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "startTime": 49.970982,
+      "endTime": 62.180917,
+      "isSet": true
     },
     {
       "text": "ああ、しびれてる 終わりがあることにも",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "startTime": 62.280917,
+      "endTime": 74.230542,
+      "isSet": true
     },
     {
       "text": "どうしようもなく、ありがたいことで世界は溢れてる",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "startTime": 74.330542,
+      "endTime": 86.450111,
+      "isSet": true
     },
     {
       "text": "この感覚が、そう、生きてる証拠なんだ！",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "startTime": 86.550111,
+      "endTime": 108.20646,
+      "isSet": true
     },
     {
       "text": "やりたいことが多すぎて",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "startTime": 124.263697,
+      "endTime": 129.161752,
+      "isSet": true
     },
     {
       "text": "未来の足音が 速すぎて",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "startTime": 129.261752,
+      "endTime": 135.543512,
+      "isSet": true
     },
     {
-      "text": "自分勝手な裸の王様に、しびれてる",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "text": "自分勝手な裸の王様に",
+      "startTime": 135.643512,
+      "endTime": 143.784758,
+      "isSet": true
+    },
+    {
+      "text": "しびれてる",
+      "startTime": 143.884758,
+      "endTime": 148.443546,
+      "isSet": true
     },
     {
       "text": "他人に興味がないくせに",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "startTime": 148.543546,
+      "endTime": 154.643109,
+      "isSet": true
     },
     {
       "text": "何かを伝えたがってる",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "startTime": 154.743109,
+      "endTime": 160.645269,
+      "isSet": true
     },
     {
       "text": "この矛盾こそが僕だって、もう笑えてくる",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "startTime": 160.745269,
+      "endTime": 173.872963,
+      "isSet": true
     },
     {
       "text": "ああ、しびれてる 無限の可能性に",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "startTime": 173.972963,
+      "endTime": 186.220678,
+      "isSet": true
     },
     {
       "text": "ああ、しびれてる 終わりがあることにも",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "startTime": 186.320678,
+      "endTime": 198.043867,
+      "isSet": true
     },
     {
       "text": "どうしようもなく、ありがたいことで世界は溢れてる",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "startTime": 198.143867,
+      "endTime": 210.481792,
+      "isSet": true
     },
     {
       "text": "この感覚が、そう、生きてる証拠なんだ！",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "startTime": 210.581792,
+      "endTime": 223.750667,
+      "isSet": true
     },
     {
       "text": "結局、何にも知らないけど",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "startTime": 223.850667,
+      "endTime": 227.258831,
+      "isSet": true
     },
     {
       "text": "「やってやるぞ」って声がする",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "startTime": 227.35883099999998,
+      "endTime": 230.851283,
+      "isSet": true
     },
     {
-      "text": "しびれてる… ああ、僕はいま、生きてる。",
-      "startTime": 0,
-      "endTime": 0,
-      "isSet": false
+      "text": "しびれてる…",
+      "startTime": 230.951283,
+      "endTime": 235.361266,
+      "isSet": true
+    },
+    {
+      "text": "ああ、僕はいま、生きてる。",
+      "startTime": 235.461266,
+      "endTime": 246.961661,
+      "isSet": true
     }
   ],
   "style": {
-    "fontSize": 44,
+    "fontSize": 48,
     "fontColor": "#ffffff",
-    "strokeColor": "#000000",
+    "strokeColor": "#ffffff",
     "strokeWidth": 2,
     "position": "bottom",
     "fontFamily": "'Shippori Mincho', 'Yu Mincho', serif",
-    "yOffset": -5
+    "yOffset": 20
   }
 }
