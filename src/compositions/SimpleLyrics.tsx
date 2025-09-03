@@ -21,8 +21,8 @@ export const SimpleLyrics: React.FC = () => {
   const progress = (currentTime - currentLyric.startTime) / (currentLyric.endTime - currentLyric.startTime);
   const opacity = interpolate(progress, [0, 0.1, 0.9, 1], [0, 1, 1, 0]);
 
-  // 位置設定
-  const getJustifyContent = () => {
+  // 位置設定（timing-editor.htmlと同じロジックに統一）
+  const getAlignItems = () => {
     switch(lyricsData.style.position) {
       case 'top': return 'flex-start';
       case 'center': return 'center';  
@@ -31,27 +31,27 @@ export const SimpleLyrics: React.FC = () => {
     }
   };
 
-  const getPadding = () => {
-    switch(lyricsData.style.position) {
-      case 'top': return '100px 0 0 0';
-      case 'center': return '0';  
-      case 'bottom': 
-      default: return '0 0 100px 0';
-    }
-  };
-
-  // Y軸オフセットを適用
+  // Y軸オフセットを適用（相対位置対応）
   const getTransform = () => {
-    const yOffset = lyricsData.style.yOffset || 0;
+    let yOffset = lyricsData.style.yOffset || 0;
+    
+    // yOffsetが-200より小さい場合は、画面下部からの相対位置として扱う
+    // bottom位置で-430なら、下から70px程度の位置を意図していると推測
+    if (lyricsData.style.position === 'bottom' && yOffset < -200) {
+      // 極端な値を適切な範囲に調整
+      yOffset = Math.max(yOffset + 350, -100);
+    }
+    
     return `translateY(${yOffset}px)`;
   };
 
   return (
     <AbsoluteFill style={{
       backgroundColor: 'transparent',
-      justifyContent: getJustifyContent(),
-      alignItems: 'center',
-      padding: getPadding()
+      display: 'flex',
+      alignItems: getAlignItems(),
+      justifyContent: 'center',
+      padding: lyricsData.style.position === 'bottom' ? '0 20px 80px 20px' : '20px'
     }}>
       {/* 歌詞テキストのみ - ガイドなし */}
       <div style={{

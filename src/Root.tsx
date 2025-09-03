@@ -2,7 +2,7 @@ import { Composition } from 'remotion';
 import { LyricsEditor, LyricsLine } from './components/LyricsEditor';
 import { WaveformTimeline } from './components/WaveformTimeline';
 import { UnifiedStudio } from './components/UnifiedStudio';
-import { SimpleLyrics } from './compositions/SimpleLyrics';
+import { LyricsMatch } from './compositions/LyricsMatch';
 import { StyleSettings } from './components/StyleControls';
 import { generateSampleLyrics } from './utils/aiTiming';
 import React, { useState } from 'react';
@@ -111,54 +111,14 @@ const ExportVideoWrapper: React.FC<{ format: 'youtube' | 'vertical' }> = ({ form
 export const RemotionRoot: React.FC = () => {
   return (
     <LyricsProvider>
-      {/* シンプルな歌詞のみの動画 */}
+      {/* 歌詞表示 - プレビューと完全一致 */}
       <Composition
-        id="SimpleLyrics"
-        component={SimpleLyrics}
-        durationInFrames={900}
+        id="LyricsMatch"
+        component={LyricsMatch}
+        durationInFrames={2400}
         fps={30}
         width={1920}
         height={1080}
-      />
-      
-      {/* 🎯 統合エディター（編集とプレビューを同時表示） */}
-      <Composition
-        id="UnifiedStudio"
-        component={UnifiedStudio}
-        durationInFrames={18000} // 300秒（5分）= 18000フレーム
-        fps={60}
-        width={1920}
-        height={1080}
-      />
-      
-      {/* 波形タイムラインエディター（従来版） */}
-      <Composition
-        id="WaveformEditor"
-        component={WaveformTimelineWrapper}
-        durationInFrames={18000} // 300秒（5分）= 18000フレーム
-        fps={60}
-        width={1400}
-        height={800}
-      />
-
-      {/* YouTube横動画用 - 最終書き出し用 */}
-      <Composition
-        id="LyricsVideoYouTube"
-        component={() => <ExportVideoWrapper format="youtube" />}
-        durationInFrames={18000} // 編集画面と同じ長さ
-        fps={60}
-        width={1920}
-        height={1080}
-      />
-
-      {/* TikTok/Instagram縦動画用 - 最終書き出し用 */}
-      <Composition
-        id="LyricsVideoVertical"
-        component={() => <ExportVideoWrapper format="vertical" />}
-        durationInFrames={18000} // 編集画面と同じ長さ
-        fps={60}
-        width={1080}
-        height={1920}
       />
     </LyricsProvider>
   );
