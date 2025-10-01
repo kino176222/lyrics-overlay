@@ -5,7 +5,8 @@ import { UnifiedStudio } from './components/UnifiedStudio';
 import { LyricsMatch } from './compositions/LyricsMatch';
 import { StyleSettings } from './components/StyleControls';
 import { generateSampleLyrics } from './utils/aiTiming';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import lyricsData from './lyrics-data.json';
 
 // 歌詞とスタイルの初期状態
 const initialLyrics: LyricsLine[] = [
@@ -109,6 +110,13 @@ const ExportVideoWrapper: React.FC<{ format: 'youtube' | 'vertical' }> = ({ form
 };
 
 export const RemotionRoot: React.FC = () => {
+  // JSONファイルの内容をwindowオブジェクトに設定（Studio用）
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).lyricsData = lyricsData;
+    }
+  }, []);
+
   return (
     <LyricsProvider>
       {/* 歌詞表示 - プレビューと完全一致 */}
@@ -119,6 +127,7 @@ export const RemotionRoot: React.FC = () => {
         fps={30}
         width={1920}
         height={1080}
+        backgroundColor="transparent"
       />
     </LyricsProvider>
   );

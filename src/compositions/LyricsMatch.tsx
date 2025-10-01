@@ -1,19 +1,30 @@
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate } from 'remotion';
+import { useCurrentFrame, useVideoConfig, interpolate } from 'remotion';
 import lyricsData from '../lyrics-data.json';
+
+// Remotion Studio対応: window.lyricsDataが存在する場合はそれを使用
+const getLyricsData = () => {
+  if (typeof window !== 'undefined' && (window as any).lyricsData) {
+    return (window as any).lyricsData;
+  }
+  return lyricsData;
+};
 
 export const LyricsMatch: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const currentTime = frame / fps;
 
+  // 動的にデータを取得
+  const currentLyricsData = getLyricsData();
+
   // 現在表示すべき歌詞を探す
-  const currentLyric = lyricsData.lyrics.find(
+  const currentLyric = currentLyricsData.lyrics.find(
     lyric => currentTime >= lyric.startTime && currentTime < lyric.endTime
   );
 
   if (!currentLyric) {
-    return <AbsoluteFill style={{ backgroundColor: 'transparent' }} />;
+    return null;
   }
 
   // フェードイン/アウト
@@ -21,7 +32,7 @@ export const LyricsMatch: React.FC = () => {
   const opacity = interpolate(progress, [0, 0.1, 0.9, 1], [0, 1, 1, 0]);
 
   // スタイル設定をJSONから読み込み
-  const { style } = lyricsData;
+  const { style } = currentLyricsData;
   
   // timing-editor.htmlと完全に同じ実装
   const getAlignItems = (position: string) => {
@@ -34,30 +45,31 @@ export const LyricsMatch: React.FC = () => {
   };
 
   return (
-    <AbsoluteFill>
-      <div style={{ 
-        position: 'absolute',
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'transparent',
-        display: 'flex',
-        alignItems: getAlignItems(style.position),
-        justifyContent: 'center',
-        paddingBottom: style.position === 'bottom' ? '50px' : '0',  // 下部の場合は余白を追加
+    <div style={{
+      position: 'absolute',
+      width: '100%',
+      height: '100%',
+      top: 0,
+      left: 0,
+      backgroundColor: 'transparent',
+      display: 'flex',
+      alignItems: getAlignItems(style.position),
+      justifyContent: 'center',
+      paddingBottom: style.position === 'bottom' ? '50px' : '0',
+      pointerEvents: 'none'
+    }}>
+      <div style={{
+        fontSize: `${style.fontSize}px`,
+        color: style.fontColor,
+        textShadow: `0 0 ${style.strokeWidth}px ${style.strokeColor}`,
+        fontFamily: style.fontFamily,
+        transform: `translateY(${style.yOffset}px)`,
+        opacity,
+        lineHeight: 1.5,
+        textAlign: 'center'
       }}>
-        <div style={{
-          fontSize: `${style.fontSize}px`,
-          color: style.fontColor,
-          textShadow: `0 0 ${style.strokeWidth}px ${style.strokeColor}`,
-          fontFamily: style.fontFamily,
-          transform: `translateY(${style.yOffset}px)`,
-          opacity,
-          lineHeight: 1.5,
-          textAlign: 'center'
-        }}>
-          {currentLyric.text}
-        </div>
+        {currentLyric.text}
       </div>
-    </AbsoluteFill>
+    </div>
   );
 };

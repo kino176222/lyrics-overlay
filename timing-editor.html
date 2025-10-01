@@ -390,9 +390,9 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div>
                     <label>フォントサイズ</label>
-                    <input type="range" id="fontSize" min="24" max="120" value="48" 
+                    <input type="range" id="fontSize" min="24" max="120" value="53" 
                            oninput="updatePreview()" style="width: 100%; margin: 10px 0;">
-                    <span id="fontSizeValue">48px</span>
+                    <span id="fontSizeValue">53px</span>
                 </div>
                 <div>
                     <label>縁取りの太さ</label>
@@ -413,14 +413,14 @@
                 <div>
                     <label>位置</label>
                     <select id="position" onchange="updatePreview()" style="width: 100%; padding: 10px; margin: 10px 0;">
-                        <option value="bottom">下部</option>
+                        <option value="bottom" selected>下部</option>
                         <option value="center">中央</option>
                         <option value="top">上部</option>
                     </select>
                     <div style="display: flex; gap: 5px; margin-top: 5px; align-items: center;">
                         <button onclick="adjustYOffset(-10)" style="padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 3px;">↓ +10px</button>
                         <button onclick="adjustYOffset(-5)" style="padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 3px;">↓ +5px</button>
-                        <span id="yOffsetValue" style="min-width: 60px; text-align: center; font-size: 12px;">0px</span>
+                        <span id="yOffsetValue" style="min-width: 60px; text-align: center; font-size: 12px;">30px</span>
                         <button onclick="adjustYOffset(5)" style="padding: 5px 10px; background: #28a745; color: white; border: none; border-radius: 3px;">↑ -5px</button>
                         <button onclick="adjustYOffset(10)" style="padding: 5px 10px; background: #28a745; color: white; border: none; border-radius: 3px;">↑ -10px</button>
                     </div>
@@ -436,7 +436,7 @@
                 </div>
             </div>
             <div style="background: #000; border-radius: 8px; margin: 20px 0; width: 100%; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; position: relative;">
-                <div id="stylePreview" style="font-size: 48px; color: #FFFFFF; text-shadow: 0 0 2px #000000; font-family: 'Hiragino Sans', sans-serif; transition: all 0.3s ease;">
+                <div id="stylePreview" style="font-size: 53px; color: #FFFFFF; text-shadow: 0 0 2px #000000; font-family: 'Hiragino Sans', sans-serif; transition: all 0.3s ease;">
                     プレビューテキスト
                 </div>
             </div>
@@ -454,6 +454,9 @@
                 </button>
                 <button class="copy-btn" onclick="copyToClipboard()">
                     📋 クリップボードにコピー
+                </button>
+                <button class="direct-save-btn" onclick="saveDirectly()" style="background: #ff6b6b; color: white; border: none; padding: 15px 25px; border-radius: 8px; font-size: 16px; font-weight: 600; margin: 10px 5px; cursor: pointer;">
+                    🎯 src/lyrics-data.json に直接保存
                 </button>
             </div>
             <div class="success-message" id="successMessage">
@@ -604,7 +607,7 @@
             }
         }
         
-        let currentYOffset = 0;
+        let currentYOffset = 30;
         let currentEditingLine = 0;
         let karaokeMode = false;
         
@@ -677,9 +680,39 @@
             a.download = 'lyrics-data.json';
             a.click();
             
-            alert('✅ ダウンロードしました！\nこのファイルを src/lyrics-data.json に置き換えてください');
+            alert('✅ ダウンロードしました！\nこのファイルを src/lyrics-data.json に置き換えてください\n\n💡 ヒント: "🎯 直接保存"ボタンを使えば自動で置き換えられます');
         }
         
+        async function saveDirectly() {
+            const data = {
+                lyrics: lyricsData,
+                style: {
+                    fontSize: parseInt(document.getElementById('fontSize').value),
+                    fontColor: document.getElementById('fontColor').value,
+                    strokeColor: document.getElementById('strokeColor').value,
+                    strokeWidth: parseInt(document.getElementById('strokeWidth').value),
+                    position: document.getElementById('position').value,
+                    fontFamily: document.getElementById('fontFamily').value,
+                    yOffset: parseInt(document.getElementById('yOffset').value)
+                }
+            };
+
+            try {
+                const jsonString = JSON.stringify(data, null, 2);
+
+                // ターミナルで実行するコマンドを表示
+                const command = `node save-lyrics-data.js '${jsonString.replace(/'/g, "\\'")}'`;
+
+                navigator.clipboard.writeText(command);
+
+                alert('📋 コマンドをクリップボードにコピーしました！\n\n以下の手順で保存してください:\n\n1. ターミナルを開く\n2. プロジェクトフォルダに移動\n3. Cmd+V で貼り付けて実行\n\nまたは、手動でJSONファイルをダウンロードして置き換えてください。');
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ エラーが発生しました: ' + error.message);
+            }
+        }
+
         function copyToClipboard() {
             const data = {
                 lyrics: lyricsData,
