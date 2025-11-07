@@ -5,18 +5,22 @@ import { UnifiedStudio } from './components/UnifiedStudio';
 import { LyricsMatch } from './compositions/LyricsMatch';
 import { StyleSettings } from './components/StyleControls';
 import { generateSampleLyrics } from './utils/aiTiming';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import lyricsData from './lyrics-data.json';
 
-// 歌詞とスタイルの初期状態
-const initialLyrics: LyricsLine[] = [
-  { text: "君の笑顔が好きなんだ", startTime: 0, endTime: 3, confidence: 1.0 },
-  { text: "この瞬間を忘れないで", startTime: 3, endTime: 6, confidence: 1.0 },
-  { text: "時が過ぎても変わらずに", startTime: 6, endTime: 9, confidence: 1.0 },
-  { text: "心の中で歌い続ける", startTime: 9, endTime: 12, confidence: 1.0 },
+type ImportedLyricsData = {
+  lyrics?: Array<Partial<LyricsLine> & { text: string; startTime: number; endTime: number }>;
+  style?: Partial<StyleSettings>;
+};
+
+const fallbackLyrics: LyricsLine[] = [
+  { text: '君の笑顔が好きなんだ', startTime: 0, endTime: 3, confidence: 1.0 },
+  { text: 'この瞬間を忘れないで', startTime: 3, endTime: 6, confidence: 1.0 },
+  { text: '時が過ぎても変わらずに', startTime: 6, endTime: 9, confidence: 1.0 },
+  { text: '心の中で歌い続ける', startTime: 9, endTime: 12, confidence: 1.0 },
 ];
 
-const initialStyleSettings: StyleSettings = {
+const fallbackStyleSettings: StyleSettings = {
   fontFamily: "'Shippori Mincho', 'しっぽり明朝', serif",
   fontSize: 24,
   fontWeight: 'bold',
@@ -29,6 +33,65 @@ const initialStyleSettings: StyleSettings = {
   fadeSpeed: 0.5,
 };
 
+const parsedLyricsData = lyricsData as ImportedLyricsData;
+
+const lyricsFromFile: LyricsLine[] = parsedLyricsData?.lyrics?.length
+  ? (parsedLyricsData.lyrics.map((line) => ({
+      ...line,
+      confidence: line.confidence ?? 1.0,
+    })) as LyricsLine[])
+  : fallbackLyrics;
+
+const styleFromFile: StyleSettings = {
+  ...fallbackStyleSettings,
+  ...(parsedLyricsData?.style ?? {}),
+};
+
+const fileSignature = JSON.stringify({
+  lyrics: lyricsFromFile,
+  style: styleFromFile,
+});
+
+const getStoredObject = <T,>(key: string): T | null => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch (error) {
+    console.warn('⚠️  Failed to parse localStorage value', { key, error });
+    return null;
+  }
+};
+
+const seedFromFileIfNeeded = () => {
+  if (typeof window === 'undefined') {
+    return { lyrics: lyricsFromFile, style: styleFromFile };
+  }
+
+  const storedFileSignature = window.localStorage.getItem('lyricsDataFileSignature');
+  if (storedFileSignature !== fileSignature) {
+    window.localStorage.setItem('lyricsData', JSON.stringify(lyricsFromFile));
+    window.localStorage.setItem('styleSettings', JSON.stringify(styleFromFile));
+    window.localStorage.setItem('lyricsDataFileSignature', fileSignature);
+    return { lyrics: lyricsFromFile, style: styleFromFile };
+  }
+
+  return {
+    lyrics: getStoredObject<LyricsLine[]>('lyricsData') ?? lyricsFromFile,
+    style: getStoredObject<StyleSettings>('styleSettings') ?? styleFromFile,
+  };
+};
+
+const getCompositionDurationInFrames = () => {
+  const sourceLyrics = getStoredObject<LyricsLine[]>('lyricsData') ?? lyricsFromFile;
+  const maxEndTime = sourceLyrics.reduce((max, line) => Math.max(max, line.endTime ?? 0), 0);
+  const derived = Math.max(Math.ceil(maxEndTime * 30) + 30, 300);
+  return Number.isFinite(derived) ? derived : 3320;
+};
+
 // 共有状態を管理するコンテキスト
 const LyricsContext = React.createContext<{
   lyrics: LyricsLine[];
@@ -38,24 +101,20 @@ const LyricsContext = React.createContext<{
 } | null>(null);
 
 const LyricsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // localStorageから読み込み、なければ初期値を使用
-  const [lyrics, setLyrics] = useState<LyricsLine[]>(() => {
-    const saved = localStorage.getItem('lyricsData');
-    return saved ? JSON.parse(saved) : initialLyrics;
-  });
-  const [styleSettings, setStyleSettings] = useState<StyleSettings>(() => {
-    const saved = localStorage.getItem('styleSettings');
-    return saved ? JSON.parse(saved) : initialStyleSettings;
-  });
+  const { lyrics: initialLyrics, style: initialStyle } = useMemo(() => seedFromFileIfNeeded(), []);
 
-  // 変更時にlocalStorageに保存
+  const [lyrics, setLyrics] = useState<LyricsLine[]>(initialLyrics);
+  const [styleSettings, setStyleSettings] = useState<StyleSettings>(initialStyle);
+
+  // 変更時にlocalStorageに保存し、最新データをシグネチャとして記録
   React.useEffect(() => {
-    localStorage.setItem('lyricsData', JSON.stringify(lyrics));
-  }, [lyrics]);
-  
-  React.useEffect(() => {
-    localStorage.setItem('styleSettings', JSON.stringify(styleSettings));
-  }, [styleSettings]);
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.localStorage.setItem('lyricsData', JSON.stringify(lyrics));
+    window.localStorage.setItem('styleSettings', JSON.stringify(styleSettings));
+  }, [lyrics, styleSettings]);
 
   return (
     <LyricsContext.Provider value={{ lyrics, styleSettings, setLyrics, setStyleSettings }}>
@@ -86,13 +145,19 @@ const WaveformTimelineWrapper: React.FC = () => {
 const ExportVideoWrapper: React.FC<{ format: 'youtube' | 'vertical' }> = ({ format }) => {
   // localStorageから最新のデータを読み込む
   const [lyrics, setLyrics] = useState<LyricsLine[]>(() => {
-    const saved = localStorage.getItem('lyricsData');
-    return saved ? JSON.parse(saved) : initialLyrics;
+    if (typeof window === 'undefined') {
+      return lyricsFromFile;
+    }
+    const saved = window.localStorage.getItem('lyricsData');
+    return saved ? JSON.parse(saved) : lyricsFromFile;
   });
   
   const [styleSettings, setStyleSettings] = useState<StyleSettings>(() => {
-    const saved = localStorage.getItem('styleSettings');
-    return saved ? JSON.parse(saved) : initialStyleSettings;
+    if (typeof window === 'undefined') {
+      return styleFromFile;
+    }
+    const saved = window.localStorage.getItem('styleSettings');
+    return saved ? JSON.parse(saved) : styleFromFile;
   });
 
   return (
@@ -117,13 +182,15 @@ export const RemotionRoot: React.FC = () => {
     }
   }, []);
 
+  const compositionDurationInFrames = useMemo(() => getCompositionDurationInFrames(), []);
+
   return (
     <LyricsProvider>
       {/* 歌詞表示 - プレビューと完全一致 */}
       <Composition
         id="LyricsMatch"
         component={LyricsMatch}
-        durationInFrames={7410}
+        durationInFrames={compositionDurationInFrames}
         fps={30}
         width={1920}
         height={1080}

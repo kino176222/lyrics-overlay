@@ -459,6 +459,9 @@
                     🎯 src/lyrics-data.json に直接保存
                 </button>
             </div>
+            <p class="hint" style="margin-top: 10px;">
+                ※ 直接保存を使う前に、ターミナルで <code>node simple-server.js</code> を起動しておいてください。
+            </p>
             <div class="success-message" id="successMessage">
                 ✅ コピーしました！src/lyrics-data.json に貼り付けてください
             </div>
@@ -686,30 +689,30 @@
         async function saveDirectly() {
             const data = {
                 lyrics: lyricsData,
-                style: {
-                    fontSize: parseInt(document.getElementById('fontSize').value),
-                    fontColor: document.getElementById('fontColor').value,
-                    strokeColor: document.getElementById('strokeColor').value,
-                    strokeWidth: parseInt(document.getElementById('strokeWidth').value),
-                    position: document.getElementById('position').value,
-                    fontFamily: document.getElementById('fontFamily').value,
-                    yOffset: parseInt(document.getElementById('yOffset').value)
-                }
+                style: getStyleSettings()
             };
 
             try {
-                const jsonString = JSON.stringify(data, null, 2);
+                const response = await fetch('http://localhost:3002/api/save-lyrics', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
 
-                // ターミナルで実行するコマンドを表示
-                const command = `node save-lyrics-data.js '${jsonString.replace(/'/g, "\\'")}'`;
+                if (!response.ok) {
+                    const errorBody = await response.json().catch(() => ({}));
+                    throw new Error(errorBody.error || 'サーバーエラー');
+                }
 
-                navigator.clipboard.writeText(command);
+                const result = await response.json();
 
-                alert('📋 コマンドをクリップボードにコピーしました！\n\n以下の手順で保存してください:\n\n1. ターミナルを開く\n2. プロジェクトフォルダに移動\n3. Cmd+V で貼り付けて実行\n\nまたは、手動でJSONファイルをダウンロードして置き換えてください。');
+                alert(`✅ 保存しました！\n${result.lines || lyricsData.length} 行の歌詞を src/lyrics-data.json に反映しました。\nRemotion Studio をリロードすると最新データが表示されます。`);
 
             } catch (error) {
                 console.error('Error:', error);
-                alert('❌ エラーが発生しました: ' + error.message);
+                alert('❌ 直接保存できませんでした。\n\n1. 別ターミナルで `node simple-server.js` を実行済みか確認\n2. それでもダメなら JSON ダウンロードボタンをご利用ください\n\n詳細: ' + error.message);
             }
         }
 
