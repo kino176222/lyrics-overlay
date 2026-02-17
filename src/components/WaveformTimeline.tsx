@@ -9,6 +9,7 @@ interface WaveformTimelineProps {
   styleSettings: StyleSettings;
   onLyricsChange: (lyrics: LyricsLine[]) => void;
   onStyleChange: (settings: StyleSettings) => void;
+  onAudioFileChange?: (audioFile: string | undefined) => void;
 }
 
 export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
@@ -17,13 +18,13 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
   styleSettings,
   onLyricsChange,
   onStyleChange,
+  onAudioFileChange,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [selectedLyricIndex, setSelectedLyricIndex] = useState<number | null>(null);
   const [showTextInput, setShowTextInput] = useState(!lyrics.length);
-  const [currentAudioFile, setCurrentAudioFile] = useState(audioFile);
   const audioRef = useRef<HTMLAudioElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -187,7 +188,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
     const file = event.target.files?.[0];
     if (file) {
       const url = URL.createObjectURL(file);
-      setCurrentAudioFile(url);
+      onAudioFileChange?.(url);
       console.log('音声ファイルがアップロードされました:', file.name);
     }
   };
@@ -347,10 +348,10 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
   return (
     <div style={containerStyle}>
       {/* 音声要素 */}
-      {currentAudioFile && (
+      {audioFile && (
         <audio
           ref={audioRef}
-          src={currentAudioFile}
+          src={audioFile}
           onTimeUpdate={() => {
             if (audioRef.current) {
               setCurrentTime(audioRef.current.currentTime);
@@ -537,7 +538,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
             style={{
               width: '100%',
               padding: '10px',
-              backgroundColor: currentAudioFile ? '#059669' : '#4f46e5',
+              backgroundColor: audioFile ? '#059669' : '#4f46e5',
               color: 'white',
               border: 'none',
               borderRadius: '5px',
@@ -545,7 +546,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
               fontSize: '14px',
             }}
           >
-            {currentAudioFile ? '✅ 音声ファイル選択済み' : '📁 MP3ファイルを選択'}
+            {audioFile ? '✅ 音声ファイル選択済み' : '📁 MP3ファイルを選択'}
           </button>
           
           {lyrics.length > 0 && (
@@ -1397,7 +1398,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
             <div>✅ この部分が見えればスクロール成功！</div>
             <div>現在時間: {currentTime.toFixed(1)}秒</div>
             <div>歌詞行数: {lyrics.length}</div>
-            <div>音声ファイル: {currentAudioFile ? '✅ 読み込み済み' : '❌ 未選択'}</div>
+            <div>音声ファイル: {audioFile ? '✅ 読み込み済み' : '❌ 未選択'}</div>
             <div>マウスホイールでスクロールしてください ↕️</div>
           </div>
         </div>
@@ -1652,14 +1653,14 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
         <div style={controlsStyle}>
           <button
             onClick={togglePlay}
-            disabled={!currentAudioFile}
+            disabled={!audioFile}
             style={{
-              backgroundColor: currentAudioFile ? '#4f46e5' : '#9333ea',
+              backgroundColor: audioFile ? '#4f46e5' : '#9333ea',
               color: 'white',
-              border: '2px solid ' + (currentAudioFile ? '#6366f1' : '#a855f7'),
+              border: '2px solid ' + (audioFile ? '#6366f1' : '#a855f7'),
               borderRadius: '8px',
               padding: '15px 30px',
-              cursor: currentAudioFile ? 'pointer' : 'not-allowed',
+              cursor: audioFile ? 'pointer' : 'not-allowed',
               fontSize: '20px',
               minWidth: '120px',
               fontWeight: 'bold',
@@ -1667,7 +1668,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = ({
               transition: 'all 0.2s',
             }}
             onMouseEnter={(e) => {
-              if (currentAudioFile) {
+              if (audioFile) {
                 e.currentTarget.style.transform = 'scale(1.05)';
                 e.currentTarget.style.boxShadow = '0 6px 8px rgba(0,0,0,0.4)';
               }

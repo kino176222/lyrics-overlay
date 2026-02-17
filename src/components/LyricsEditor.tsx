@@ -45,16 +45,19 @@ export const LyricsEditor: React.FC<LyricsEditorProps> = ({
   audioFile,
   format = 'youtube',
   fontFamily = "'Shippori Mincho', 'しっぽり明朝', 'Hiragino Mincho ProN', 'ヒラギノ明朝 ProN', serif",
-  fontSize = format === 'youtube' ? 48 : 54,
+  fontSize,
   fontColor = '#000000',
   strokeColor = '#FFFFFF',
   strokeWidth = 2,
-  position = format === 'youtube' ? 'bottom' : 'center',
+  position,
   yOffset = 0,
   animationStyle = 'fade',
   fadeSpeed = 0.5,
   durationOffset = 0,
 }) => {
+  // デフォルト値を動的に設定
+  const actualFontSize = fontSize ?? (format === 'youtube' ? 48 : 54);
+  const actualPosition = position ?? (format === 'youtube' ? 'bottom' : 'center');
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
   
@@ -158,7 +161,7 @@ export const LyricsEditor: React.FC<LyricsEditorProps> = ({
   // テキストスタイル（WebkitTextStroke使用）
   const textStyle: React.CSSProperties = {
     fontFamily,
-    fontSize: `${fontSize}px`,
+    fontSize: `${actualFontSize}px`,
     color: fontColor,
     textAlign: 'center',
     fontWeight: 'bold',
@@ -176,7 +179,7 @@ export const LyricsEditor: React.FC<LyricsEditorProps> = ({
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: position === 'center' ? 'center' : 'flex-end',
+        justifyContent: actualPosition === 'center' ? 'center' : 'flex-end',
         alignItems: 'center',
       }}
     >
@@ -204,11 +207,11 @@ export const LyricsEditor: React.FC<LyricsEditorProps> = ({
       <div
         style={{
           position: 'absolute',
-          top: position === 'center' ? '50%' : 'auto',
-          bottom: position === 'bottom' ? '10%' : 'auto',
+          top: actualPosition === 'center' ? '50%' : actualPosition === 'top' ? `${10 + (yOffset || 0) / height * 100}%` : 'auto',
+          bottom: actualPosition === 'bottom' ? `${10 - (yOffset || 0) / height * 100}%` : 'auto',
           left: '50%',
-          transform: position === 'center' 
-            ? 'translate(-50%, -50%)' 
+          transform: actualPosition === 'center' 
+            ? `translate(-50%, calc(-50% + ${yOffset || 0}px))` 
             : 'translateX(-50%)',
           width: '90%',
           maxWidth: width * 0.9,

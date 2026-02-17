@@ -30,16 +30,26 @@ const initialStyleSettings: StyleSettings = {
 const LyricsContext = React.createContext<{
   lyrics: LyricsLine[];
   styleSettings: StyleSettings;
+  audioFile: string | undefined;
   setLyrics: (lyrics: LyricsLine[]) => void;
   setStyleSettings: (settings: StyleSettings) => void;
+  setAudioFile: (audioFile: string | undefined) => void;
 } | null>(null);
 
 const LyricsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [lyrics, setLyrics] = useState<LyricsLine[]>(initialLyrics);
   const [styleSettings, setStyleSettings] = useState<StyleSettings>(initialStyleSettings);
+  const [audioFile, setAudioFile] = useState<string | undefined>(undefined);
 
   return (
-    <LyricsContext.Provider value={{ lyrics, styleSettings, setLyrics, setStyleSettings }}>
+    <LyricsContext.Provider value={{ 
+      lyrics, 
+      styleSettings, 
+      audioFile,
+      setLyrics, 
+      setStyleSettings,
+      setAudioFile 
+    }}>
       {children}
     </LyricsContext.Provider>
   );
@@ -50,15 +60,16 @@ const WaveformTimelineWrapper: React.FC = () => {
   const context = React.useContext(LyricsContext);
   if (!context) return null;
 
-  const { lyrics, styleSettings, setLyrics, setStyleSettings } = context;
+  const { lyrics, styleSettings, audioFile, setLyrics, setStyleSettings, setAudioFile } = context;
 
   return (
     <WaveformTimeline
       lyrics={lyrics}
-      audioFile={undefined}
+      audioFile={audioFile}
       styleSettings={styleSettings}
       onLyricsChange={setLyrics}
       onStyleChange={setStyleSettings}
+      onAudioFileChange={setAudioFile}
     />
   );
 };
@@ -68,18 +79,22 @@ const ExportVideoWrapper: React.FC<{ format: 'youtube' | 'vertical' }> = ({ form
   const context = React.useContext(LyricsContext);
   if (!context) return null;
 
-  const { lyrics, styleSettings } = context;
+  const { lyrics, styleSettings, audioFile } = context;
 
   return (
     <LyricsEditor
       format={format}
       lyricsData={lyrics}
+      audioFile={audioFile}
       fontFamily={styleSettings.fontFamily}
       fontSize={format === 'youtube' ? Math.max(styleSettings.fontSize, 48) : Math.max(styleSettings.fontSize, 54)}
       fontColor={styleSettings.fontColor}
       strokeColor={styleSettings.strokeColor}
       strokeWidth={styleSettings.strokeWidth}
       position={styleSettings.position}
+      yOffset={styleSettings.yOffset}
+      animationStyle={styleSettings.animationStyle}
+      fadeSpeed={styleSettings.fadeSpeed}
     />
   );
 };
