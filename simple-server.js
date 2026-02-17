@@ -197,6 +197,42 @@ app.get('/api/download/:filename', (req, res) => {
     });
 });
 
+// 歌詞データ保存エンドポイント
+app.post('/api/save-lyrics', (req, res) => {
+    const { lyrics, style } = req.body || {};
+
+    if (!Array.isArray(lyrics) || lyrics.length === 0) {
+        return res.status(400).json({
+            success: false,
+            error: '歌詞データが空か、配列ではありません。'
+        });
+    }
+
+    const normalizedLyrics = lyrics.map((line) => ({
+        text: line.text,
+        startTime: Number(line.startTime) || 0,
+        endTime: Number(line.endTime) || 0,
+        isSet: line.isSet !== false,
+        confidence: typeof line.confidence === 'number' ? line.confidence : 1.0,
+    }));
+
+    const payload = {
+        lyrics: normalizedLyrics,
+        style: style || {},
+    };
+
+    const targetPath = path.join(__dirname, 'src', 'lyrics-data.json');
+
+    try {
+        fs.writeFileSync(targetPath, JSON.stringify(payload, null, 2));
+        console.log('💾 歌詞データを保存しました:', targetPath);
+        res.json({ success: true, path: targetPath, lines: normalizedLyrics.length });
+    } catch (error) {
+        console.error('❌ 歌詞データ保存エラー:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // エラーハンドリング
 app.use((error, req, res, next) => {
     console.error('🚨 予期しないエラー:', error);

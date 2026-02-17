@@ -6,6 +6,9 @@
     "start": "remotion studio",
     "build": "remotion bundle",
     "render": "remotion render",
+    "render:youtube": "remotion render LyricsVideoYouTube out/lyrics-youtube.mov --codec=prores --prores-profile=4444",
+    "render:vertical": "remotion render LyricsVideoVertical out/lyrics-vertical.mov --codec=prores --prores-profile=4444",
+    "render:transparent": "remotion render LyricsVideoYouTube out/lyrics-transparent.mov --codec=prores --prores-profile=4444",
     "upgrade": "remotion upgrade",
     "dev": "remotion studio"
   },

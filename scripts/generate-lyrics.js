@@ -32,15 +32,42 @@ if (lines.length === 0) {
 // 各行の表示時間を計算
 const timePerLine = duration / lines.length;
 
-// 歌詞データを生成
-const lyricsData = lines.map((text, index) => ({
-    startTime: Math.round(index * timePerLine * 10) / 10,
-    endTime: Math.round((index + 1) * timePerLine * 10) / 10,
-    text: text.trim()
-}));
+// 既存のスタイル設定を保持（存在する場合）
+const outputPath = path.join(__dirname, '..', 'src', 'lyrics-data.json');
+let existingStyle = {
+    fontSize: 48,
+    fontColor: '#FFFFFF',
+    strokeColor: '#000000',
+    strokeWidth: 2,
+    position: 'bottom',
+    fontFamily: "'Shippori Mincho', 'しっぽり明朝', 'Hiragino Mincho ProN', 'ヒラギノ明朝 ProN', serif",
+    yOffset: 0
+};
+
+if (fs.existsSync(outputPath)) {
+    try {
+        const currentData = JSON.parse(fs.readFileSync(outputPath, 'utf-8'));
+        if (currentData && typeof currentData === 'object' && currentData.style) {
+            existingStyle = { ...existingStyle, ...currentData.style };
+        }
+    } catch (error) {
+        console.warn('⚠️  既存のスタイル設定を読み込めませんでした。初期値を使用します。');
+    }
+}
+
+// Remotion Studio用の歌詞データ構造を生成
+const lyricsData = {
+    lyrics: lines.map((text, index) => ({
+        text: text.trim(),
+        startTime: Number((index * timePerLine).toFixed(3)),
+        endTime: Number(((index + 1) * timePerLine).toFixed(3)),
+        isSet: true,
+        confidence: 1.0
+    })),
+    style: existingStyle
+};
 
 // JSONファイルとして保存
-const outputPath = path.join(__dirname, '..', 'src', 'lyrics-data.json');
 fs.writeFileSync(outputPath, JSON.stringify(lyricsData, null, 2));
 
 console.log('✅ 歌詞データを生成しました！');
@@ -50,13 +77,17 @@ console.log(`⏱️  1行あたりの表示時間: ${timePerLine.toFixed(1)}秒`
 
 // Root.tsxのdurationInFramesも更新
 const rootPath = path.join(__dirname, '..', 'src', 'Root.tsx');
-const rootContent = fs.readFileSync(rootPath, 'utf-8');
+const rootContent = fs.existsSync(rootPath) ? fs.readFileSync(rootPath, 'utf-8') : '';
 const newDurationInFrames = Math.ceil(duration * 30); // 30fps
 
-const updatedRoot = rootContent.replace(
-    /durationInFrames=\{\d+\}/g,
-    `durationInFrames={${newDurationInFrames}}`
-);
-
-fs.writeFileSync(rootPath, updatedRoot);
-console.log(`🎬 動画の長さを ${duration}秒 (${newDurationInFrames}フレーム) に設定しました`);
+if (/durationInFrames=\{\d+\}/g.test(rootContent)) {
+    const updatedRoot = rootContent.replace(
+        /durationInFrames=\{\d+\}/g,
+        `durationInFrames={${newDurationInFrames}}`
+    );
+    fs.writeFileSync(rootPath, updatedRoot);
+    console.log(`🎬 動画の長さを ${duration}秒 (${newDurationInFrames}フレーム) に設定しました`);
+} else {
+    console.log('ℹ️  durationInFrames は現在自動計算されるため、Root.tsx の更新は不要です。');
+    console.log(`   参考値: ${duration}秒 ≒ ${newDurationInFrames}フレーム`);
+}
