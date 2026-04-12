@@ -1,239 +1,215 @@
 {
   "lyrics": [
     {
-      "text": "曖昧な靄の中 目は覚める",
-      "startTime": 1.655515,
-      "endTime": 7.784603,
+      "text": "色が褪せた朝焼けに",
+      "startTime": 7.17542,
+      "endTime": 12.597836,
       "isSet": true
     },
     {
-      "text": "同じ影を 映す鏡へ ため息ひとつ",
-      "startTime": 11.203646,
-      "endTime": 21.681797,
+      "text": "燻る昨日の残響",
+      "startTime": 12.697835999999999,
+      "endTime": 18.287199,
       "isSet": true
     },
     {
-      "text": "レイラレイ レイラレイ",
-      "startTime": 21.781797,
-      "endTime": 27.218277,
+      "text": "交わした言葉の重さが",
+      "startTime": 18.387199000000003,
+      "endTime": 23.027918,
       "isSet": true
     },
     {
-      "text": "心はまだ夢の中",
-      "startTime": 27.318277000000002,
-      "endTime": 34.693926,
+      "text": "鎖みたいに絡みつく",
+      "startTime": 23.127918,
+      "endTime": 28.778582,
       "isSet": true
     },
     {
-      "text": "色も感情も失くした喪服を羽織る",
-      "startTime": 56.686758,
-      "endTime": 61.274029,
+      "text": "痛みで心 焼き尽くして",
+      "startTime": 28.878582,
+      "endTime": 34.085534,
       "isSet": true
     },
     {
-      "text": "額に焼き付けた誰かのための言葉",
-      "startTime": 61.374029,
-      "endTime": 67.680701,
+      "text": "黒い衝動を翼に変えて",
+      "startTime": 34.185534000000004,
+      "endTime": 43.321296,
       "isSet": true
     },
     {
-      "text": "これで感情は 封じ込めた",
-      "startTime": 67.780701,
-      "endTime": 70.942664,
+      "text": "走り出す 灰燼の空の下",
+      "startTime": 43.421296,
+      "endTime": 48.613998,
       "isSet": true
     },
     {
-      "text": "単調な日々を抜け出すように",
-      "startTime": 71.04266399999999,
-      "endTime": 75.180626,
+      "text": "答えなんてまだ見えないまま",
+      "startTime": 48.713998000000004,
+      "endTime": 54.017108,
       "isSet": true
     },
     {
-      "text": "静かに息を吐く",
-      "startTime": 75.280626,
-      "endTime": 78.430293,
+      "text": "凍てついた鏡に映る 完璧な絶望さえ",
+      "startTime": 54.117108,
+      "endTime": 59.359482,
       "isSet": true
     },
     {
-      "text": "毒虫になった朝と 何が違うっていうの？",
-      "startTime": 78.530293,
-      "endTime": 82.086922,
+      "text": "超えていけ 傷だらけの鼓動で",
+      "startTime": 59.459482,
+      "endTime": 64.84797,
       "isSet": true
     },
     {
-      "text": "生きてる価値無くレイオフ上等",
-      "startTime": 82.186922,
-      "endTime": 84.868947,
+      "text": "夜明けの轍を刻むから",
+      "startTime": 64.94797,
+      "endTime": 70.36759,
       "isSet": true
     },
     {
-      "text": "口先だけの冗談　魂半分どっか飛んで放談",
-      "startTime": 84.968947,
-      "endTime": 90.116458,
+      "text": "削れたスパイクの跡",
+      "startTime": 70.46759,
+      "endTime": 75.323874,
       "isSet": true
     },
     {
-      "text": "空中に浮かぶ 私のゴースト",
-      "startTime": 90.21645799999999,
-      "endTime": 93.054286,
+      "text": "正しいフォームの残像",
+      "startTime": 75.423874,
+      "endTime": 80.835191,
       "isSet": true
     },
     {
-      "text": "今日も思考停止で 今日も",
-      "startTime": 93.154286,
-      "endTime": 95.564463,
+      "text": "叩きつけるだけの拳じゃ",
+      "startTime": 80.93519099999999,
+      "endTime": 85.952933,
       "isSet": true
     },
     {
-      "text": "意味ない労働",
-      "startTime": 95.664463,
-      "endTime": 97.602934,
+      "text": "何もかもが遠すぎて",
+      "startTime": 86.052933,
+      "endTime": 91.082616,
       "isSet": true
     },
     {
-      "text": "なんのために？",
-      "startTime": 97.702934,
-      "endTime": 98.726651,
+      "text": "苛立ちで視野 滲んでく",
+      "startTime": 91.182616,
+      "endTime": 96.430172,
       "isSet": true
     },
     {
-      "text": "レイラレイレイラレイ",
-      "startTime": 98.826651,
-      "endTime": 101.569691,
+      "text": "それでも脚を止められない",
+      "startTime": 96.530172,
+      "endTime": 104.270445,
       "isSet": true
     },
     {
-      "text": "上司の声は 遠い木霊のようで",
-      "startTime": 101.669691,
-      "endTime": 106.285244,
+      "text": "駆け抜ける 灰燼の空の下",
+      "startTime": 104.37044499999999,
+      "endTime": 108.750173,
       "isSet": true
     },
     {
-      "text": "レイラレイ レイラレイ",
-      "startTime": 106.385244,
-      "endTime": 108.947757,
+      "text": "千切れそうな心 抱えたまま",
+      "startTime": 108.850173,
+      "endTime": 114.020059,
       "isSet": true
     },
     {
-      "text": "耳をすり抜けてく影",
-      "startTime": 109.04775699999999,
-      "endTime": 112.377665,
+      "text": "揺るぎない王者の瞳が 私の弱さ嘲笑う",
+      "startTime": 114.120059,
+      "endTime": 119.367782,
       "isSet": true
     },
     {
-      "text": "退屈なリズムに 飽き飽きしても",
-      "startTime": 112.47766499999999,
-      "endTime": 117.509524,
+      "text": "振り払え 有りっ丈の怒りで",
+      "startTime": 119.467782,
+      "endTime": 124.743844,
       "isSet": true
     },
     {
-      "text": "レイラレイ レイラレイ",
-      "startTime": 117.609524,
-      "endTime": 120.207099,
+      "text": "微かな光を探すから",
+      "startTime": 124.84384399999999,
+      "endTime": 130.623049,
       "isSet": true
     },
     {
-      "text": "今日も流れてく時間",
-      "startTime": 120.307099,
-      "endTime": 124.48093,
+      "text": "「強くなれ」と聞こえた気がした",
+      "startTime": 130.723049,
+      "endTime": 135.073822,
       "isSet": true
     },
     {
-      "text": "鏡の自分に 問う 「お前、誰？」",
-      "startTime": 124.58093,
-      "endTime": 127.102024,
+      "text": "それは呪いか それとも祈りか",
+      "startTime": 135.173822,
+      "endTime": 140.456757,
       "isSet": true
     },
     {
-      "text": "感情の回路は もう断線",
-      "startTime": 127.202024,
-      "endTime": 129.718585,
+      "text": "この空の向こう側で",
+      "startTime": 140.556757,
+      "endTime": 146.199919,
       "isSet": true
     },
     {
-      "text": "誰にも会いたくない完全",
-      "startTime": 129.81858499999998,
-      "endTime": 132.187913,
+      "text": "本当は 何を望むの",
+      "startTime": 146.299919,
+      "endTime": 151.8681,
       "isSet": true
     },
     {
-      "text": "遮断したい この空間",
-      "startTime": 132.287913,
-      "endTime": 134.673554,
+      "text": "走り出す 灰燼の空の下",
+      "startTime": 151.9681,
+      "endTime": 156.865144,
       "isSet": true
     },
     {
-      "text": "繰り返す瞬間、断絶した時間、魂ごと破綻",
-      "startTime": 134.773554,
-      "endTime": 140.647681,
+      "text": "答えなんていらないのかもしれない",
+      "startTime": 156.96514399999998,
+      "endTime": 162.276746,
       "isSet": true
     },
     {
-      "text": "レイラレイ　レイラレイ",
-      "startTime": 140.747681,
-      "endTime": 146.281031,
+      "text": "凍てついた鏡をいつか この手で打ち砕いて",
+      "startTime": 162.376746,
+      "endTime": 167.459838,
       "isSet": true
     },
     {
-      "text": "感情のバグから放つ エグい光が貫く",
-      "startTime": 146.381031,
-      "endTime": 151.068776,
+      "text": "超えていけ 傷だらけの鼓動で",
+      "startTime": 167.55983799999998,
+      "endTime": 172.839283,
       "isSet": true
     },
     {
-      "text": "影の行進が 新しい朝へと続く",
-      "startTime": 151.168776,
-      "endTime": 156.467379,
+      "text": "夜明けの轍を刻むから",
+      "startTime": 172.939283,
+      "endTime": 178.714032,
       "isSet": true
     },
     {
-      "text": "レイラレイ レイラレイ",
-      "startTime": 156.567379,
-      "endTime": 159.318268,
+      "text": "灰に塗れても",
+      "startTime": 178.814032,
+      "endTime": 183.715353,
       "isSet": true
     },
     {
-      "text": "静かな決意を胸に",
-      "startTime": 159.41826799999998,
-      "endTime": 162.032984,
+      "text": "この脚が燃え尽きても",
+      "startTime": 183.815353,
+      "endTime": 188.661951,
       "isSet": true
     },
     {
-      "text": "新たな一歩を 踏み出していく影たち",
-      "startTime": 162.132984,
-      "endTime": 168.884943,
-      "isSet": true
-    },
-    {
-      "text": "レイラレイ レイラレイ...",
-      "startTime": 168.984943,
-      "endTime": 174.290046,
-      "isSet": true
-    },
-    {
-      "text": "遠くでサイレンが響く",
-      "startTime": 174.39004599999998,
-      "endTime": 178.895345,
-      "isSet": true
-    },
-    {
-      "text": "レイラレイ レイラレイ...",
-      "startTime": 178.995345,
-      "endTime": 185.450621,
-      "isSet": true
-    },
-    {
-      "text": "私の ゴーストダンス",
-      "startTime": 185.550621,
-      "endTime": 189.539234,
+      "text": "明日へ",
+      "startTime": 188.76195099999998,
+      "endTime": 193.502531,
       "isSet": true
     }
   ],
   "style": {
     "fontSize": 53,
-    "fontColor": "#000000",
-    "strokeColor": "#ffffff",
-    "strokeWidth": 7,
+    "fontColor": "#ffffff",
+    "strokeColor": "#000000",
+    "strokeWidth": 3,
     "position": "bottom",
     "fontFamily": "'Shippori Mincho', 'Yu Mincho', serif",
     "yOffset": 30

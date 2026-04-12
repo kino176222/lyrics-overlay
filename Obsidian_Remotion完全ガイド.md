@@ -1,4 +1,4 @@
-# 🎬 Remotionで透過歌詞動画を作る完全ガイド
+# 🎬 Remotionでもゔぃえ歌詞動画を作る完全ガイド
 
 #動画制作 #Remotion #歌詞オーバーレイ #FinalCutPro #自動化
 
@@ -42,7 +42,7 @@ RemotionとReactを使用して、Final Cut Pro用の透過背景歌詞オーバ
 ## 🚀 セットアップ手順
 
 ### 1. 初期セットアップ（初回のみ）
-
+２。
 ```bash
 # プロジェクトフォルダへ移動
 cd ~/Developer/lyrics-overlay

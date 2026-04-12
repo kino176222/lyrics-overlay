@@ -8,7 +8,7 @@ Config.setProResProfile('4444');
 
 // 一時ファイル問題を回避するための設定
 Config.setConcurrency(1);
-Config.setFrameRange([0, 100]); // テスト用に短く設定
+// Config.setFrameRange([0, 100]); // テスト用に短く設定 - 無効化
 
 // Web版の設定を継承
 Config.overrideWebpackConfig((currentConfiguration) => {

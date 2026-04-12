@@ -13,19 +13,20 @@
     "dev": "remotion studio"
   },
   "dependencies": {
-    "@remotion/cli": "^4.0.0",
     "@remotion/bundler": "^4.0.0",
-    "@remotion/renderer": "^4.0.0",
-    "@remotion/player": "^4.0.0",
+    "@remotion/cli": "^4.0.0",
     "@remotion/media-utils": "^4.0.0",
+    "@remotion/player": "^4.0.0",
+    "@remotion/renderer": "^4.0.0",
+    "multiparty": "^4.2.3",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "typescript": "^5.0.0"
   },
   "devDependencies": {
+    "@remotion/eslint-config": "^4.0.0",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
-    "@remotion/eslint-config": "^4.0.0",
     "eslint": "^8.0.0"
   }
 }
